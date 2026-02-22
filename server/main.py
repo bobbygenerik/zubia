@@ -289,7 +289,7 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
                 lang_groups[lang] = []
             lang_groups[lang].append(listener)
 
-        for target_lang, listeners in lang_groups.items():
+        async def process_group(target_lang, listeners):
             try:
                 # Translate
                 if target_lang != detected_lang:
@@ -325,6 +325,12 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
 
             except Exception as e:
                 logger.error(f"Pipeline failed for lang {target_lang}: {e}")
+
+        # Process all language groups in parallel
+        await asyncio.gather(*(
+            process_group(lang, listeners)
+            for lang, listeners in lang_groups.items()
+        ))
 
         elapsed = time.time() - start_time
         logger.info(f"Pipeline completed in {elapsed:.2f}s for {sender.name}")
