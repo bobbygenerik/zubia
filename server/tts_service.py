@@ -27,7 +27,7 @@ VOICE_MODELS = {
     "zh": "zh_CN-huayan-medium",
     "ja": "ja_JP-takumi-medium",  # Note: may fall back
     "ar": "ar_JO-kareem-medium",
-    "pt": "pt_BR-faber-medium",
+    "pt": "pt_PT-tugão-medium",
     "ru": "ru_RU-denis-medium",
     "ko": "ko_KR-kss-medium",  # Note: may fall back
 }

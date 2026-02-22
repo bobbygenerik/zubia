@@ -274,7 +274,7 @@ class AppState extends ChangeNotifier {
   String getFlagEmoji(String langCode) {
     const flags = {
       'en': '🇺🇸', 'es': '🇪🇸', 'fr': '🇫🇷', 'de': '🇩🇪', 'zh': '🇨🇳',
-      'ja': '🇯🇵', 'ar': '🇸🇦', 'pt': '🇧🇷', 'ru': '🇷🇺', 'ko': '🇰🇷',
+      'ja': '🇯🇵', 'ar': '🇸🇦', 'pt': '🇵🇹', 'ru': '🇷🇺', 'ko': '🇰🇷',
     };
     return flags[langCode] ?? '🌍';
   }
