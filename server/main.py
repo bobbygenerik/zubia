@@ -39,6 +39,16 @@ async def serve_index():
     return FileResponse(str(CLIENT_DIR / "index.html"))
 
 
+@app.get("/history")
+async def serve_history():
+    return FileResponse(str(CLIENT_DIR / "history.html"))
+
+
+@app.get("/onboarding")
+async def serve_onboarding():
+    return FileResponse(str(CLIENT_DIR / "onboarding.html"))
+
+
 # ---------------------------------------------------------------------------
 # Room & User Management
 # ---------------------------------------------------------------------------
