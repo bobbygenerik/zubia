@@ -29,50 +29,6 @@
         <div class="lobby-container">
             <header class="lobby-header">
                 <div class="logo-group">
-                    <div class="logo-icon">
-                        <svg class="drop-shadow-2xl overflow-visible" fill="none" viewBox="0 0 200 200"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="gradientZ" x1="0%" x2="100%" y1="0%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#FF00FF;stop-opacity:1"></stop>
-                                    <stop offset="100%" style="stop-color:#D000D0;stop-opacity:1"></stop>
-                                </linearGradient>
-                                <filter height="200%" id="whiteGlow" width="200%" x="-50%" y="-50%">
-                                    <feGaussianBlur in="SourceAlpha" stdDeviation="4"></feGaussianBlur>
-                                    <feOffset dx="0" dy="0" result="offsetblur"></feOffset>
-                                    <feFlood flood-color="white" result="color"></feFlood>
-                                    <feComposite in="color" in2="offsetblur" operator="in"></feComposite>
-                                    <feMerge>
-                                        <feMergeNode></feMergeNode>
-                                        <feMergeNode in="SourceGraphic"></feMergeNode>
-                                    </feMerge>
-                                </filter>
-                            </defs>
-                            <style>
-                                .neon-ring {
-                                    fill: none;
-                                    stroke: white;
-                                    stroke-linecap: round;
-                                    stroke-linejoin: round;
-                                    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
-                                }
-                            </style>
-                            <path class="neon-ring"
-                                d="M100 20 C 130 20, 150 40, 165 60 C 180 80, 180 120, 165 140 C 150 160, 130 180, 100 180 C 70 180, 50 160, 35 140 C 20 120, 20 80, 35 60 C 50 40, 70 20, 100 20 Z"
-                                opacity="0.6" stroke-width="2" />
-                            <path class="neon-ring"
-                                d="M100 35 C 125 35, 140 50, 150 65 C 160 80, 160 115, 150 135 C 140 150, 125 165, 100 165 C 75 165, 60 150, 50 135 C 40 115, 40 80, 50 65 C 60 50, 75 35, 100 35 Z"
-                                opacity="0.8" stroke-width="2.5" />
-                            <path class="neon-ring"
-                                d="M100 50 C 118 50, 130 60, 138 72 C 145 85, 145 112, 138 128 C 130 140, 118 150, 100 150 C 82 150, 70 140, 62 128 C 55 112, 55 85, 62 72 C 70 60, 82 50, 100 50 Z"
-                                opacity="1" stroke-width="3" />
-                            <g filter="url(#whiteGlow)">
-                                <path
-                                    d="M70 72 C 70 66, 74 62, 80 62 L 120 62 C 126 62, 130 66, 130 72 L 130 76 C 130 79, 128 82, 125 85 L 95 122 L 125 122 C 131 122, 135 126, 135 132 C 135 138, 131 142, 125 142 L 75 142 C 69 142, 65 138, 65 132 L 65 128 C 65 125, 67 122, 70 119 L 100 82 L 80 82 C 74 82, 70 78, 70 72 Z"
-                                    fill="url(#gradientZ)" stroke="white" stroke-opacity="0.7" stroke-width="2" />
-                            </g>
-                        </svg>
-                    </div>
                     <div>
                         <h1 class="logo-text">Zubia</h1>
                         <p class="logo-tagline">Speak your language. Hear theirs.</p>
