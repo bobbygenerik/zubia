@@ -736,7 +736,7 @@ function initVisualizer() {
                 // Walkie mode gets amber/orange bars, real-time gets violet/cyan
                 const hue = state.mode === 'walkie'
                     ? 30 + (i / bufferLength) * 20   // Amber range
-                    : 260 + (i / bufferLength) * 120; // Violet to cyan
+                    : 290 + (i / bufferLength) * 40;   // Magenta/pink range
                 ctx.fillStyle = `hsla(${hue}, 80%, 65%, 0.8)`;
                 ctx.fillRect(x, H - barHeight, barWidth - gap, barHeight);
                 x += barWidth;
@@ -745,7 +745,7 @@ function initVisualizer() {
         } else {
             const time = Date.now() / 1000;
             ctx.beginPath();
-            ctx.strokeStyle = 'rgba(139, 92, 246, 0.15)';
+            ctx.strokeStyle = 'rgba(255, 0, 255, 0.15)';
             ctx.lineWidth = 2;
             for (let x = 0; x < W; x++) {
                 const y = H / 2 + Math.sin(x * 0.02 + time) * 8 + Math.sin(x * 0.01 + time * 0.5) * 4;
