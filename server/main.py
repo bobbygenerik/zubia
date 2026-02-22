@@ -14,8 +14,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 
 # Configure logging
 logging.basicConfig(
@@ -29,31 +28,10 @@ logger = logging.getLogger("voxbridge")
 # ---------------------------------------------------------------------------
 app = FastAPI(title="Zubia", version="1.0.0")
 
-# Serve the frontend
-CLIENT_DIR = Path(__file__).parent.parent / "client"
-app.mount("/static", StaticFiles(directory=str(CLIENT_DIR)), name="static")
-
-
 @app.get("/")
-async def serve_onboarding_root():
-    """Onboarding is the entry point."""
-    return FileResponse(str(CLIENT_DIR / "onboarding.html"))
-
-
-@app.get("/app")
-async def serve_app():
-    """Main lobby + chat room."""
-    return FileResponse(str(CLIENT_DIR / "index.html"))
-
-
-@app.get("/history")
-async def serve_history():
-    return FileResponse(str(CLIENT_DIR / "history.html"))
-
-
-@app.get("/onboarding")
-async def serve_onboarding():
-    return FileResponse(str(CLIENT_DIR / "onboarding.html"))
+async def serve_root():
+    """Redirect root to the APK download endpoint."""
+    return RedirectResponse(url="/download")
 
 
 @app.get("/download")
