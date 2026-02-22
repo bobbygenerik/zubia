@@ -87,36 +87,27 @@ class _ChatAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: ZubiaColors.charcoalMid,
-        border: const Border(bottom: BorderSide(color: ZubiaColors.glassBorder)),
+        border: Border(bottom: BorderSide(color: ZubiaColors.glassBorder)),
       ),
       child: Row(
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back_ios, size: 20),
             onPressed: () {
-              state.leaveRoom();
-              context.go('/lobby');
+              state.leaveThread();
+              context.go('/home');
             },
           ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(state.roomName ?? 'Room', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                Text(state.otherUserName ?? 'Chat', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                const SizedBox(height: 2),
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: ZubiaColors.magenta.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: ZubiaColors.magenta.withValues(alpha: 0.2)),
-                      ),
-                      child: Text(state.roomId ?? '', style: const TextStyle(fontSize: 11, fontFamily: 'monospace', color: ZubiaColors.magenta)),
-                    ),
-                    const SizedBox(width: 8),
                     _StatusDot(status: state.connectionStatus),
                     const SizedBox(width: 4),
                     Text(
@@ -125,22 +116,6 @@ class _ChatAppBar extends StatelessWidget {
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          // Participant count
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.people_outline, size: 16, color: ZubiaColors.textSecondary),
-                const SizedBox(width: 4),
-                Text('${state.users.length}', style: const TextStyle(fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -242,7 +217,7 @@ class _FeedItem extends StatelessWidget {
                         Text(entry.fromUser ?? '', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: ZubiaColors.textSecondary)),
                         const SizedBox(width: 6),
                         if (entry.fromLanguage != null)
-                          Text('${state.getFlagEmoji(entry.fromLanguage!)}', style: const TextStyle(fontSize: 12)),
+                          Text(state.getFlagEmoji(entry.fromLanguage!), style: const TextStyle(fontSize: 12)),
                       ],
                     ),
                     const SizedBox(height: 6),

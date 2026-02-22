@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../services/websocket_service.dart';
 import '../services/audio_recorder.dart';
@@ -60,14 +61,14 @@ class AppState extends ChangeNotifier {
   String userLanguage = 'en';
   String? userId;
 
-  // Room
-  String? roomId;
-  String? roomName;
+  // Thread
+  String? threadId;
+  String? otherUserName;
   List<RoomUser> users = [];
 
   // State
   Map<String, String> languages = {};
-  List<Map<String, dynamic>> activeRooms = [];
+  List<Map<String, dynamic>> threads = [];
   String connectionStatus = 'disconnected'; // disconnected, connecting, connected, recording, processing
   bool isRecording = false;
   String mode = 'realtime'; // realtime or walkie
@@ -81,6 +82,28 @@ class AppState extends ChangeNotifier {
     ws = WebSocketService(baseUrl: serverUrl);
   }
 
+  Future<void> loadIdentity() async {
+    final prefs = await SharedPreferences.getInstance();
+    userId = prefs.getString('userId');
+    userName = prefs.getString('userName') ?? '';
+    userLanguage = prefs.getString('userLanguage') ?? 'en';
+    notifyListeners();
+  }
+
+  Future<void> registerAndSaveIdentity(String name, String lang) async {
+    final result = await api.registerUser(name, lang);
+    if (result != null) {
+      userId = result['id'];
+      userName = result['name'];
+      userLanguage = result['language'];
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userId', userId!);
+      await prefs.setString('userName', userName);
+      await prefs.setString('userLanguage', userLanguage);
+      notifyListeners();
+    }
+  }
+
   Future<void> loadLanguages() async {
     languages = await api.getLanguages();
     if (userLanguage.isEmpty && languages.isNotEmpty) {
@@ -89,9 +112,11 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadRooms() async {
-    activeRooms = await api.getRooms();
-    notifyListeners();
+  Future<void> loadThreads() async {
+    if (userId != null) {
+      threads = await api.getThreads(userId!);
+      notifyListeners();
+    }
   }
 
   void setMode(String m) {
@@ -106,32 +131,32 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Room Management ──────────────────────────────────
+  // ── Thread Management ──────────────────────────────────
 
-  Future<String?> createRoom() async {
-    final room = await api.createRoom("$userName's Room");
-    if (room != null) return room['id'] as String?;
-    return null;
+  Future<String?> createThreadWithUser(String otherUserId) async {
+    if (userId == null) return null;
+    return await api.createThread(userId!, otherUserId);
   }
 
-  void joinRoom(String roomCode) {
-    roomId = roomCode;
+  void joinThread(String tid, String otherName) {
+    if (userId == null) return;
+    threadId = tid;
+    otherUserName = otherName;
     connectionStatus = 'connecting';
     notifyListeners();
 
-    ws.connect(roomCode, userName, userLanguage);
+    ws.connect(tid, userId!);
 
     _wsSub?.cancel();
     _wsSub = ws.messages.listen(_handleMessage);
   }
 
-  void leaveRoom() {
+  void leaveThread() {
     stopRecording();
     ws.disconnect();
     _wsSub?.cancel();
-    roomId = null;
-    roomName = null;
-    userId = null;
+    threadId = null;
+    otherUserName = null;
     users = [];
     feed = [];
     connectionStatus = 'disconnected';
@@ -198,13 +223,11 @@ class AppState extends ChangeNotifier {
   void _handleMessage(ServerMessage msg) {
     switch (msg.type) {
       case 'joined':
-        userId = msg.data['userId'] as String?;
-        roomName = msg.data['roomName'] as String?;
-        roomId = msg.data['roomId'] as String?;
+        threadId = msg.data['threadId'] as String? ?? threadId;
         _parseUsers(msg.data['users']);
         connectionStatus = 'connected';
         feed.clear();
-        _addSystemFeed('You joined the room. ${mode == 'walkie' ? 'Hold the mic to talk.' : 'Tap the mic to start streaming.'}');
+        _addSystemFeed('You joined the chat. ${mode == 'walkie' ? 'Hold the mic to talk.' : 'Tap the mic to start streaming.'}');
         break;
 
       case 'user_joined':

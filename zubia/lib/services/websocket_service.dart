@@ -25,14 +25,13 @@ class WebSocketService {
   Stream<ServerMessage> get messages => _messageController.stream;
   bool get isConnected => _connected;
 
-  void connect(String roomId, String userName, String language) {
+  void connect(String threadId, String userId) {
     final wsUrl = baseUrl.replaceFirst('http', 'ws');
-    _channel = WebSocketChannel.connect(Uri.parse('$wsUrl/ws/$roomId'));
+    _channel = WebSocketChannel.connect(Uri.parse('$wsUrl/ws/thread/$threadId'));
 
     // Send join message
     _channel!.sink.add(jsonEncode({
-      'name': userName,
-      'language': language,
+      'userId': userId,
     }));
 
     _channel!.stream.listen(

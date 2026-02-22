@@ -83,7 +83,7 @@ class OnboardingScreen extends StatelessWidget {
                       ],
                     ),
                     child: MaterialButton(
-                      onPressed: () => context.go('/lobby'),
+                      onPressed: () => context.go('/home'),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,

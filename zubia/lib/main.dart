@@ -6,7 +6,8 @@ import 'package:provider/provider.dart';
 import 'theme.dart';
 import 'providers/app_state.dart';
 import 'screens/onboarding_screen.dart';
-import 'screens/lobby_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/new_chat_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/history_screen.dart';
 
@@ -31,7 +32,8 @@ final _router = GoRouter(
   initialLocation: '/onboarding',
   routes: [
     GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
-    GoRoute(path: '/lobby', builder: (context, state) => const LobbyScreen()),
+    GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+    GoRoute(path: '/new_chat', builder: (context, state) => const NewChatScreen()),
     GoRoute(path: '/chat', builder: (context, state) => const ChatScreen()),
     GoRoute(path: '/history', builder: (context, state) => const HistoryScreen()),
   ],
