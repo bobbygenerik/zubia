@@ -56,6 +56,19 @@ async def serve_onboarding():
     return FileResponse(str(CLIENT_DIR / "onboarding.html"))
 
 
+@app.get("/download")
+async def download_apk():
+    """Download the Flutter APK directly."""
+    apk_path = Path(__file__).parent.parent / "zubia/build/app/outputs/flutter-apk/app-release.apk"
+    if apk_path.exists():
+        return FileResponse(
+            path=str(apk_path),
+            filename="Zubia-App.apk",
+            media_type="application/vnd.android.package-archive"
+        )
+    return {"error": "APK not built yet"}
+
+
 # ---------------------------------------------------------------------------
 # Room & User Management
 # ---------------------------------------------------------------------------

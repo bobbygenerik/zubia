@@ -12,7 +12,7 @@ import 'screens/history_screen.dart';
 
 // ── Server Configuration ─────────────────────────
 // Change this to your VPS IP/domain
-const String kServerUrl = 'http://15.204.95.57:8000';
+const String kServerUrl = 'http://15.204.95.57';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
