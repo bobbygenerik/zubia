@@ -35,7 +35,14 @@ app.mount("/static", StaticFiles(directory=str(CLIENT_DIR)), name="static")
 
 
 @app.get("/")
-async def serve_index():
+async def serve_onboarding_root():
+    """Onboarding is the entry point."""
+    return FileResponse(str(CLIENT_DIR / "onboarding.html"))
+
+
+@app.get("/app")
+async def serve_app():
+    """Main lobby + chat room."""
     return FileResponse(str(CLIENT_DIR / "index.html"))
 
 

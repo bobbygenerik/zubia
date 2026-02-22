@@ -764,6 +764,12 @@ function initVisualizer() {
 function switchScreen(screen) {
     dom.lobbyScreen.classList.toggle('active', screen === 'lobby');
     dom.chatScreen.classList.toggle('active', screen === 'chat');
+
+    // Hide bottom nav in chat room, show in lobby
+    const lobbyNav = document.getElementById('lobby-nav');
+    if (lobbyNav) {
+        lobbyNav.style.display = screen === 'chat' ? 'none' : 'flex';
+    }
 }
 
 function showOverlay(text) {
