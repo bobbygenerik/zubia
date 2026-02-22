@@ -66,17 +66,12 @@ class _LobbyScreenState extends State<LobbyScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Header
-                        Row(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(width: 40, height: 40, child: ZubiaLogo()),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Zubia', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                                Text('Speak your language. Hear theirs.', style: TextStyle(fontSize: 12, color: ZubiaColors.textSecondary)),
-                              ],
-                            ),
+                            const Text('Zubia', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+                            const SizedBox(height: 4),
+                            Text('Speak your language. Hear theirs.', style: TextStyle(fontSize: 14, color: ZubiaColors.textSecondary)),
                           ],
                         ),
                         const SizedBox(height: 28),
