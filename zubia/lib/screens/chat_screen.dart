@@ -188,62 +188,87 @@ class _FeedItem extends StatelessWidget {
   Widget build(BuildContext context) {
     if (entry.type == 'system') {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('⚡', style: TextStyle(fontSize: 16)),
-            const SizedBox(width: 8),
-            Expanded(child: Text(entry.systemText ?? '', style: TextStyle(color: ZubiaColors.textSecondary, fontSize: 13))),
+            const Text('⚡', style: TextStyle(fontSize: 14)),
+            const SizedBox(width: 6),
+            Flexible(child: Text(entry.systemText ?? '', style: TextStyle(color: ZubiaColors.textSecondary, fontSize: 12), textAlign: TextAlign.center)),
           ],
         ),
       );
     }
 
+    final isMe = entry.fromUser == state.userName;
     final initial = (entry.fromUser ?? '?')[0].toUpperCase();
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ZubiaColors.glassBorder),
-      ),
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: ZubiaColors.magenta.withValues(alpha: 0.2),
-            child: Text(initial, style: const TextStyle(color: ZubiaColors.magenta, fontWeight: FontWeight.w700)),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(entry.fromUser ?? '', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                    const SizedBox(width: 8),
-                    if (entry.fromLanguage != null)
-                      Text(
-                        '${state.getFlagEmoji(entry.fromLanguage!)} ${entry.fromLanguage!.toUpperCase()}'
-                        '${entry.toLanguage != null ? ' → ${state.getFlagEmoji(entry.toLanguage!)} ${entry.toLanguage!.toUpperCase()}' : ''}',
-                        style: const TextStyle(fontSize: 11, color: ZubiaColors.textMuted),
-                      ),
-                  ],
+          if (!isMe) ...[
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: ZubiaColors.magenta.withValues(alpha: 0.15),
+              child: Text(initial, style: const TextStyle(color: ZubiaColors.magenta, fontWeight: FontWeight.w700, fontSize: 14)),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isMe ? ZubiaColors.magenta.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(16),
+                  topRight: const Radius.circular(16),
+                  bottomLeft: Radius.circular(isMe ? 16 : 4),
+                  bottomRight: Radius.circular(isMe ? 4 : 16),
                 ),
-                if (entry.originalText != null) ...[
-                  const SizedBox(height: 4),
-                  Text('"${entry.originalText}"', style: TextStyle(color: ZubiaColors.textSecondary, fontSize: 13, fontStyle: FontStyle.italic)),
+                border: Border.all(
+                  color: isMe ? ZubiaColors.magenta.withValues(alpha: 0.3) : ZubiaColors.glassBorder,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  if (!isMe) ...[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(entry.fromUser ?? '', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: ZubiaColors.textSecondary)),
+                        const SizedBox(width: 6),
+                        if (entry.fromLanguage != null)
+                          Text('${state.getFlagEmoji(entry.fromLanguage!)}', style: const TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                  ],
+                  if (entry.originalText != null && !isMe) ...[
+                    Text('"${entry.originalText}"', style: TextStyle(color: ZubiaColors.textSecondary, fontSize: 13, fontStyle: FontStyle.italic)),
+                    const SizedBox(height: 4),
+                  ],
+                  if (entry.translatedText != null && !isMe)
+                    Text(entry.translatedText!, style: const TextStyle(fontSize: 15))
+                  else if (isMe && entry.originalText != null)
+                    Text(entry.originalText!, style: const TextStyle(fontSize: 15))
+                  else if (isMe && entry.translatedText != null)
+                    Text(entry.translatedText!, style: const TextStyle(fontSize: 15)),
                 ],
-                if (entry.translatedText != null) ...[
-                  const SizedBox(height: 4),
-                  Text(entry.translatedText!, style: const TextStyle(fontSize: 14)),
-                ],
-              ],
+              ),
             ),
           ),
+          if (isMe) ...[
+            const SizedBox(width: 8),
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: ZubiaColors.success.withValues(alpha: 0.15),
+              child: Text(initial, style: const TextStyle(color: ZubiaColors.success, fontWeight: FontWeight.w700, fontSize: 14)),
+            ),
+          ],
         ],
       ),
     );

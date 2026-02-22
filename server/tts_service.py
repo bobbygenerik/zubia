@@ -137,6 +137,9 @@ def synthesize(text: str, lang: str, speed: float = 1.0) -> bytes:
         # Synthesize to WAV in memory
         wav_buffer = io.BytesIO()
         with wave.open(wav_buffer, "wb") as wav_file:
+            wav_file.setnchannels(1)
+            wav_file.setsampwidth(2)
+            wav_file.setframerate(voice.config.sample_rate)
             voice.synthesize(text, wav_file, length_scale=1.0 / speed)
 
         wav_bytes = wav_buffer.getvalue()
