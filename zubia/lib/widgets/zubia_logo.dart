@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import '../theme.dart';
 
 /// The official Zubia Z logo with neon rings, painted via CustomPainter.
@@ -32,10 +31,41 @@ class _ZubiaLogoPainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
     }
 
-    // Draw organic rings
-    _drawRing(canvas, cx, cy, 80 * scale, ringPaint(0.6, 2));
-    _drawRing(canvas, cx, cy, 65 * scale, ringPaint(0.8, 2.5));
-    _drawRing(canvas, cx, cy, 50 * scale, ringPaint(1.0, 3));
+    // Ring 1 (opacity 0.6, width 2)
+    final ring1 = Path();
+    ring1.moveTo(100 * scale, 20 * scale);
+    ring1.cubicTo(130 * scale, 20 * scale, 150 * scale, 40 * scale, 165 * scale, 60 * scale);
+    ring1.cubicTo(180 * scale, 80 * scale, 180 * scale, 120 * scale, 165 * scale, 140 * scale);
+    ring1.cubicTo(150 * scale, 160 * scale, 130 * scale, 180 * scale, 100 * scale, 180 * scale);
+    ring1.cubicTo(70 * scale, 180 * scale, 50 * scale, 160 * scale, 35 * scale, 140 * scale);
+    ring1.cubicTo(20 * scale, 120 * scale, 20 * scale, 80 * scale, 35 * scale, 60 * scale);
+    ring1.cubicTo(50 * scale, 40 * scale, 70 * scale, 20 * scale, 100 * scale, 20 * scale);
+    ring1.close();
+    canvas.drawPath(ring1, ringPaint(0.6, 2));
+
+    // Ring 2 (opacity 0.8, width 2.5)
+    final ring2 = Path();
+    ring2.moveTo(100 * scale, 35 * scale);
+    ring2.cubicTo(125 * scale, 35 * scale, 140 * scale, 50 * scale, 150 * scale, 65 * scale);
+    ring2.cubicTo(160 * scale, 80 * scale, 160 * scale, 115 * scale, 150 * scale, 135 * scale);
+    ring2.cubicTo(140 * scale, 150 * scale, 125 * scale, 165 * scale, 100 * scale, 165 * scale);
+    ring2.cubicTo(75 * scale, 165 * scale, 60 * scale, 150 * scale, 50 * scale, 135 * scale);
+    ring2.cubicTo(40 * scale, 115 * scale, 40 * scale, 80 * scale, 50 * scale, 65 * scale);
+    ring2.cubicTo(60 * scale, 50 * scale, 75 * scale, 35 * scale, 100 * scale, 35 * scale);
+    ring2.close();
+    canvas.drawPath(ring2, ringPaint(0.8, 2.5));
+
+    // Ring 3 (opacity 1.0, width 3)
+    final ring3 = Path();
+    ring3.moveTo(100 * scale, 50 * scale);
+    ring3.cubicTo(118 * scale, 50 * scale, 130 * scale, 60 * scale, 138 * scale, 72 * scale);
+    ring3.cubicTo(145 * scale, 85 * scale, 145 * scale, 112 * scale, 138 * scale, 128 * scale);
+    ring3.cubicTo(130 * scale, 140 * scale, 118 * scale, 150 * scale, 100 * scale, 150 * scale);
+    ring3.cubicTo(82 * scale, 150 * scale, 70 * scale, 140 * scale, 62 * scale, 128 * scale);
+    ring3.cubicTo(55 * scale, 112 * scale, 55 * scale, 85 * scale, 62 * scale, 72 * scale);
+    ring3.cubicTo(70 * scale, 60 * scale, 82 * scale, 50 * scale, 100 * scale, 50 * scale);
+    ring3.close();
+    canvas.drawPath(ring3, ringPaint(1.0, 3));
 
     // Z letter path
     final zPaint = Paint()
@@ -129,25 +159,6 @@ class _ZubiaLogoPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2 * scale,
     );
-  }
-
-  void _drawRing(Canvas canvas, double cx, double cy, double radius, Paint paint) {
-    final path = Path();
-    const steps = 64;
-    for (int i = 0; i <= steps; i++) {
-      final angle = (i / steps) * 2 * math.pi;
-      final wobble = math.sin(angle * 3) * radius * 0.08;
-      final r = radius + wobble;
-      final x = cx + r * math.cos(angle);
-      final y = cy + r * math.sin(angle);
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-    canvas.drawPath(path, paint);
   }
 
   @override
