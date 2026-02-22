@@ -95,6 +95,7 @@ class _ChatAppBar extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back_ios, size: 20),
+            tooltip: 'Back to Home',
             onPressed: () {
               state.leaveThread();
               context.go('/home');
@@ -344,24 +345,40 @@ class _ModeToggle extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: GestureDetector(
-                  onTap: () => state.setMode('realtime'),
-                  child: Center(
-                    child: Text('Real-time', style: TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600,
-                      color: state.mode == 'realtime' ? Colors.white : ZubiaColors.textMuted,
-                    )),
+                child: Semantics(
+                  button: true,
+                  label: 'Real-time mode',
+                  selected: state.mode == 'realtime',
+                  child: Tooltip(
+                    message: 'Switch to Real-time mode',
+                    child: GestureDetector(
+                      onTap: () => state.setMode('realtime'),
+                      child: Center(
+                        child: Text('Real-time', style: TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600,
+                          color: state.mode == 'realtime' ? Colors.white : ZubiaColors.textMuted,
+                        )),
+                      ),
+                    ),
                   ),
                 ),
               ),
               Expanded(
-                child: GestureDetector(
-                  onTap: () => state.setMode('walkie'),
-                  child: Center(
-                    child: Text('Walkie-talkie', style: TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600,
-                      color: state.mode == 'walkie' ? Colors.white : ZubiaColors.textMuted,
-                    )),
+                child: Semantics(
+                  button: true,
+                  label: 'Walkie-talkie mode',
+                  selected: state.mode == 'walkie',
+                  child: Tooltip(
+                    message: 'Switch to Walkie-talkie mode',
+                    child: GestureDetector(
+                      onTap: () => state.setMode('walkie'),
+                      child: Center(
+                        child: Text('Walkie-talkie', style: TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600,
+                          color: state.mode == 'walkie' ? Colors.white : ZubiaColors.textMuted,
+                        )),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -383,37 +400,54 @@ class _MicButton extends StatelessWidget {
     final recording = state.isRecording;
     final color = isWalkie ? const Color(0xFFF59E0B) : ZubiaColors.magenta;
 
-    return GestureDetector(
-      onTap: isWalkie ? null : () {
-        if (recording) {
-          state.stopRecording();
-        } else {
-          state.startRealtimeRecording();
-        }
-      },
-      onLongPressStart: isWalkie ? (_) => state.startWalkieRecording() : null,
-      onLongPressEnd: isWalkie ? (_) => state.stopWalkieAndSend() : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 72,
-        height: 72,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: recording
-              ? null
-              : LinearGradient(colors: [color, color.withValues(alpha: 0.8)]),
-          color: recording ? ZubiaColors.danger : null,
-          boxShadow: [
-            BoxShadow(
-              color: (recording ? ZubiaColors.danger : color).withValues(alpha: 0.4),
-              blurRadius: recording ? 24 : 16,
+    final semanticLabel = isWalkie
+        ? 'Walkie Talkie Microphone'
+        : (recording ? 'Stop Recording' : 'Start Recording');
+
+    final semanticHint = isWalkie
+        ? 'Hold to record, release to send'
+        : (recording ? 'Tap to stop recording' : 'Tap to start recording');
+
+    return Semantics(
+      label: semanticLabel,
+      hint: semanticHint,
+      button: true,
+      enabled: true,
+      child: Tooltip(
+        message: semanticHint,
+        child: GestureDetector(
+          onTap: isWalkie ? null : () {
+            if (recording) {
+              state.stopRecording();
+            } else {
+              state.startRealtimeRecording();
+            }
+          },
+          onLongPressStart: isWalkie ? (_) => state.startWalkieRecording() : null,
+          onLongPressEnd: isWalkie ? (_) => state.stopWalkieAndSend() : null,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: recording
+                  ? null
+                  : LinearGradient(colors: [color, color.withValues(alpha: 0.8)]),
+              color: recording ? ZubiaColors.danger : null,
+              boxShadow: [
+                BoxShadow(
+                  color: (recording ? ZubiaColors.danger : color).withValues(alpha: 0.4),
+                  blurRadius: recording ? 24 : 16,
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Icon(
-          recording ? Icons.stop : Icons.mic,
-          size: 32,
-          color: Colors.white,
+            child: Icon(
+              recording ? Icons.stop : Icons.mic,
+              size: 32,
+              color: Colors.white,
+            ),
+          ),
         ),
       ),
     );
