@@ -117,22 +117,29 @@ def synthesize(text: str, lang: str, speed: float = 1.0) -> bytes:
         return _generate_silence(0.5)
 
     try:
-        onnx_path, json_path = _download_voice(lang)
-    except Exception as e:
-        logger.error(f"Could not get voice model for '{lang}': {e}")
-        return _generate_silence(0.5)
+        # Optimization: Check in-memory cache first to avoid file I/O and logging
+        onnx_path_candidate = _get_voice_path(lang)[0]
+        cache_key = str(onnx_path_candidate)
 
-    try:
-        # Use piper-tts via its Python API
         from piper import PiperVoice
 
-        # Cache the synthesizer
-        cache_key = str(onnx_path)
-        if cache_key not in _synthesizers:
-            logger.info(f"Loading Piper voice: {onnx_path.name}")
-            _synthesizers[cache_key] = PiperVoice.load(str(onnx_path), str(json_path))
+        if cache_key in _synthesizers:
+            voice = _synthesizers[cache_key]
+        else:
+            # Not in memory, ensure it is downloaded/present
+            try:
+                onnx_path, json_path = _download_voice(lang)
+            except Exception as e:
+                logger.error(f"Could not get voice model for '{lang}': {e}")
+                return _generate_silence(0.5)
 
-        voice = _synthesizers[cache_key]
+            # Load and cache
+            cache_key = str(onnx_path)
+            if cache_key not in _synthesizers:
+                logger.info(f"Loading Piper voice: {onnx_path.name}")
+                _synthesizers[cache_key] = PiperVoice.load(str(onnx_path), str(json_path))
+
+            voice = _synthesizers[cache_key]
 
         # Synthesize to WAV in memory
         wav_buffer = io.BytesIO()
