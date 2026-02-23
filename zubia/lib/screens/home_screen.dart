@@ -85,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
             controller: _nameController,
             onChanged: (_) => setState(() {}),
             decoration: const InputDecoration(
+              labelText: 'Name',
               hintText: 'Your name',
               prefixIcon: Icon(Icons.person_outline, size: 20),
             ),
@@ -94,6 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
             initialValue: state.userLanguage.isNotEmpty ? state.userLanguage : 'en',
             dropdownColor: ZubiaColors.charcoalLight,
             decoration: const InputDecoration(
+              labelText: 'Language',
               hintText: 'Language',
               prefixIcon: Icon(Icons.language, size: 20),
             ),
@@ -229,8 +231,22 @@ class _BottomNav extends StatelessWidget {
               ),
               child: const SizedBox(width: 36, height: 36, child: ZubiaLogo()),
             ),
-            _NavItem(icon: Icons.favorite_outline, label: 'Saved', active: currentIndex == 2, onTap: () {}),
-            _NavItem(icon: Icons.settings_outlined, label: 'Settings', active: currentIndex == 3, onTap: () {}),
+            _NavItem(
+                icon: Icons.favorite_outline,
+                label: 'Saved',
+                active: currentIndex == 2,
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Saved items coming soon!')));
+                }),
+            _NavItem(
+                icon: Icons.settings_outlined,
+                label: 'Settings',
+                active: currentIndex == 3,
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Settings coming soon!')));
+                }),
           ],
         ),
       ),
@@ -243,19 +259,41 @@ class _NavItem extends StatelessWidget {
   final String label;
   final bool active;
   final VoidCallback onTap;
-  const _NavItem({required this.icon, required this.label, required this.active, required this.onTap});
+  const _NavItem(
+      {required this.icon,
+      required this.label,
+      required this.active,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 24, color: active ? ZubiaColors.magenta : ZubiaColors.textMuted),
-          const SizedBox(height: 2),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: active ? ZubiaColors.magenta : ZubiaColors.textMuted)),
-        ],
+    return Semantics(
+      button: true,
+      label: label,
+      selected: active,
+      child: Tooltip(
+        message: label,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: ExcludeSemantics(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 24,
+                    color: active ? ZubiaColors.magenta : ZubiaColors.textMuted),
+                const SizedBox(height: 2),
+                Text(label,
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: active
+                            ? ZubiaColors.magenta
+                            : ZubiaColors.textMuted)),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
