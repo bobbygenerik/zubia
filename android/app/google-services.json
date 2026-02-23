@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "270956621730",
+    "project_id": "zubia-412ae",
+    "storage_bucket": "zubia-412ae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:270956621730:android:93439c3ef93a0bb18e4cfb",
+        "android_client_info": {
+          "package_name": "com.zubia.zubia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQ3-7YUTUvc49wZVCi-5H_xRnNJBpGSa8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
