@@ -111,7 +111,7 @@ async def list_rooms():
 @app.post("/api/rooms")
 async def create_room(data: dict = {}):
     """Create a new room."""
-    room_id = str(uuid.uuid4())[:8]
+    room_id = str(uuid.uuid4())
     room_name = data.get("name", f"Room {room_id}")
     rooms[room_id] = Room(id=room_id, name=room_name)
     logger.info(f"Room created: {room_id} ({room_name})")
