@@ -9,6 +9,7 @@ import wave
 import uuid
 import time
 import logging
+import os
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
@@ -29,6 +30,17 @@ logging.basicConfig(
 logger = logging.getLogger("voxbridge")
 
 # ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+APK_PATH = Path(
+    os.getenv(
+        "APK_PATH",
+        Path(__file__).parent.parent / "zubia/build/app/outputs/flutter-apk/app-release.apk"
+    )
+)
+
+
+# ---------------------------------------------------------------------------
 # Application
 # ---------------------------------------------------------------------------
 app = FastAPI(title="Zubia", version="1.0.0")
@@ -42,10 +54,9 @@ async def serve_root():
 @app.get("/download")
 async def download_apk():
     """Download the Flutter APK directly."""
-    apk_path = Path(__file__).parent.parent / "zubia/build/app/outputs/flutter-apk/app-release.apk"
-    if apk_path.exists():
+    if APK_PATH.exists():
         return FileResponse(
-            path=str(apk_path),
+            path=str(APK_PATH),
             filename="Zubia-App.apk",
             media_type="application/vnd.android.package-archive"
         )
