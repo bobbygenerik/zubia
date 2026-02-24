@@ -38,7 +38,7 @@ PIPER_DOWNLOAD_BASE = "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.
 _synthesizers: dict[str, object] = {}
 
 
-def _get_voice_path(lang: str) -> tuple[Optional[Path], Optional[Path]]:
+def _get_voice_path(lang: str) -> tuple[Path, Path, str, str, str, str, str]:
     """Get paths to .onnx and .onnx.json for a language's voice model."""
     model_name = VOICE_MODELS.get(lang)
     if not model_name:
