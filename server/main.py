@@ -15,6 +15,9 @@ from typing import Optional
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from pydantic import ValidationError
+
+from schemas import RoomCreate, UserJoin
 
 # Configure logging
 logging.basicConfig(
@@ -109,10 +112,10 @@ async def list_rooms():
 
 
 @app.post("/api/rooms")
-async def create_room(data: dict = {}):
+async def create_room(data: RoomCreate):
     """Create a new room."""
     room_id = str(uuid.uuid4())[:8]
-    room_name = data.get("name", f"Room {room_id}")
+    room_name = data.name if data.name else f"Room {room_id}"
     rooms[room_id] = Room(id=room_id, name=room_name)
     logger.info(f"Room created: {room_id} ({room_name})")
     return JSONResponse({"id": room_id, "name": room_name})
@@ -134,8 +137,15 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         return
 
     user_id = str(uuid.uuid4())[:8]
-    user_name = join_msg.get("name", f"User-{user_id}")
-    user_lang = join_msg.get("language", "en")
+
+    try:
+        user_data = UserJoin(**join_msg)
+        user_name = user_data.name if user_data.name else f"User-{user_id}"
+        user_lang = user_data.language
+    except ValidationError as e:
+        logger.error(f"Invalid join message: {e}")
+        await websocket.close(code=4002, reason="Invalid join data")
+        return
 
     # Create room if it doesn't exist
     if room_id not in rooms:
