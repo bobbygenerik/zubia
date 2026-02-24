@@ -239,6 +239,56 @@ async def handle_control_message(room: Room, user: User, data: dict):
         logger.info(f"User '{user.name}' changed language to '{new_lang}'")
 
 
+async def process_language_group(
+    target_lang: str,
+    listeners: list[User],
+    text: str,
+    detected_lang: str,
+    sender_name: str
+):
+    """
+    Process translation and TTS for a specific language group.
+    """
+    from translate_service import translate as translate_text
+    from tts_service import synthesize
+
+    try:
+        # Translate
+        if target_lang != detected_lang:
+            translated = await asyncio.get_event_loop().run_in_executor(
+                None, lambda tl=target_lang: translate_text(text, detected_lang, tl)
+            )
+        else:
+            translated = text
+
+        logger.info(f"Translate [{detected_lang}->{target_lang}]: '{translated}'")
+
+        # TTS
+        tts_audio = await asyncio.get_event_loop().run_in_executor(
+            None, lambda tl=target_lang, tx=translated: synthesize(tx, tl)
+        )
+
+        # Send to all listeners with this language
+        for listener in listeners:
+            try:
+                # Send metadata first
+                await listener.websocket.send_json({
+                    "type": "translated_audio_meta",
+                    "fromUser": sender_name,
+                    "fromLanguage": detected_lang,
+                    "toLanguage": target_lang,
+                    "originalText": text,
+                    "translatedText": translated,
+                })
+                # Then send audio bytes
+                await listener.websocket.send_bytes(tts_audio)
+            except Exception as e:
+                logger.error(f"Failed to send audio to {listener.name}: {e}")
+
+    except Exception as e:
+        logger.error(f"Pipeline failed for lang {target_lang}: {e}")
+
+
 async def process_audio(room: Room, sender: User, audio_bytes: bytes):
     """
     Full AI translation pipeline:
@@ -276,9 +326,6 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
             pass
 
         # Step 2: Translate and synthesize for each listener
-        from translate_service import translate as translate_text
-        from tts_service import synthesize
-
         # Group listeners by target language to avoid duplicate work
         lang_groups: dict[str, list[User]] = {}
         for uid, listener in room.users.items():
@@ -289,46 +336,9 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
                 lang_groups[lang] = []
             lang_groups[lang].append(listener)
 
-        async def process_group(target_lang, listeners):
-            try:
-                # Translate
-                if target_lang != detected_lang:
-                    translated = await asyncio.get_event_loop().run_in_executor(
-                        None, lambda tl=target_lang: translate_text(text, detected_lang, tl)
-                    )
-                else:
-                    translated = text
-
-                logger.info(f"Translate [{detected_lang}->{target_lang}]: '{translated}'")
-
-                # TTS
-                tts_audio = await asyncio.get_event_loop().run_in_executor(
-                    None, lambda tl=target_lang, tx=translated: synthesize(tx, tl)
-                )
-
-                # Send to all listeners with this language
-                for listener in listeners:
-                    try:
-                        # Send metadata first
-                        await listener.websocket.send_json({
-                            "type": "translated_audio_meta",
-                            "fromUser": sender.name,
-                            "fromLanguage": detected_lang,
-                            "toLanguage": target_lang,
-                            "originalText": text,
-                            "translatedText": translated,
-                        })
-                        # Then send audio bytes
-                        await listener.websocket.send_bytes(tts_audio)
-                    except Exception as e:
-                        logger.error(f"Failed to send audio to {listener.name}: {e}")
-
-            except Exception as e:
-                logger.error(f"Pipeline failed for lang {target_lang}: {e}")
-
         # Process all language groups in parallel
         await asyncio.gather(*(
-            process_group(lang, listeners)
+            process_language_group(lang, listeners, text, detected_lang, sender.name)
             for lang, listeners in lang_groups.items()
         ))
 
