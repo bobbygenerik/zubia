@@ -7,3 +7,4 @@ piper-tts>=1.2.0
 numpy>=1.26.0
 python-multipart>=0.0.6
 aiofiles>=23.2.0
+slowapi>=0.1.9
