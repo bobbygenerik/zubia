@@ -13,8 +13,11 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Configure logging
 logging.basicConfig(
@@ -27,6 +30,11 @@ logger = logging.getLogger("voxbridge")
 # Application
 # ---------------------------------------------------------------------------
 app = FastAPI(title="Zubia", version="1.0.0")
+
+# Rate Limiter
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.get("/")
 async def serve_root():
@@ -109,7 +117,8 @@ async def list_rooms():
 
 
 @app.post("/api/rooms")
-async def create_room(data: dict = {}):
+@limiter.limit("5/minute")
+async def create_room(request: Request, data: dict = {}):
     """Create a new room."""
     room_id = str(uuid.uuid4())[:8]
     room_name = data.get("name", f"Room {room_id}")
