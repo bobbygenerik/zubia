@@ -6,8 +6,8 @@ Generates natural-sounding speech audio from text, per language.
 import io
 import wave
 import logging
-import subprocess
 import json
+import requests
 from pathlib import Path
 from typing import Optional
 
@@ -59,6 +59,15 @@ def _get_voice_path(lang: str) -> tuple[Optional[Path], Optional[Path]]:
     return onnx_path, json_path, model_name, lang_short, lang_region, name, quality
 
 
+def _download_file(url: str, path: Path, timeout: int = 60):
+    """Download a file using requests with streaming."""
+    with requests.get(url, stream=True, timeout=timeout) as response:
+        response.raise_for_status()
+        with open(path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+
+
 def _download_voice(lang: str) -> tuple[Path, Path]:
     """Download the Piper voice model for a language if not already present."""
     onnx_path, json_path, model_name, lang_short, lang_region, name, quality = _get_voice_path(lang)
@@ -77,17 +86,13 @@ def _download_voice(lang: str) -> tuple[Path, Path]:
 
     try:
         # Download ONNX model
-        subprocess.run(
-            ["wget", "-q", "-O", str(onnx_path), onnx_url],
-            check=True, timeout=120
-        )
+        _download_file(onnx_url, onnx_path, timeout=120)
+
         # Download config JSON
-        subprocess.run(
-            ["wget", "-q", "-O", str(json_path), json_url],
-            check=True, timeout=30
-        )
+        _download_file(json_url, json_path, timeout=30)
+
         logger.info(f"Voice model '{model_name}' downloaded successfully.")
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         logger.error(f"Failed to download voice model '{model_name}': {e}")
         # Clean up partial downloads
         onnx_path.unlink(missing_ok=True)
