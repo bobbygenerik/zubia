@@ -5,8 +5,10 @@ Converts audio bytes (WAV/PCM) to transcribed text with language detection.
 
 import io
 import wave
+import math
 import logging
 import numpy as np
+import scipy.signal
 from faster_whisper import WhisperModel
 
 logger = logging.getLogger("voxbridge.stt")
@@ -84,11 +86,14 @@ def transcribe(wav_bytes: bytes, source_lang: str | None = None) -> dict:
 
     # Resample to 16kHz if needed (Whisper expects 16kHz)
     if sample_rate != 16000:
-        # Simple resampling by interpolation
-        duration = len(audio) / sample_rate
-        target_len = int(duration * 16000)
-        indices = np.linspace(0, len(audio) - 1, target_len)
-        audio = np.interp(indices, np.arange(len(audio)), audio)
+        target_sr = 16000
+        # Calculate up/down factors
+        gcd = math.gcd(sample_rate, target_sr)
+        up = target_sr // gcd
+        down = sample_rate // gcd
+
+        # Use polyphase filtering for better quality and performance on large inputs
+        audio = scipy.signal.resample_poly(audio, up, down).astype(np.float32)
 
     try:
         segments, info = model.transcribe(
