@@ -6,8 +6,9 @@ Generates natural-sounding speech audio from text, per language.
 import io
 import wave
 import logging
-import subprocess
 import json
+import urllib.request
+import urllib.error
 from pathlib import Path
 from typing import Optional
 
@@ -36,6 +37,17 @@ PIPER_DOWNLOAD_BASE = "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.
 
 # Cache for loaded voice synthesizers
 _synthesizers: dict[str, object] = {}
+
+
+def _download_file(url: str, dest_path: Path, timeout: int = 60):
+    """Download a file from a URL to a destination path using urllib."""
+    with urllib.request.urlopen(url, timeout=timeout) as response:
+        with open(dest_path, 'wb') as f:
+            while True:
+                chunk = response.read(8192)
+                if not chunk:
+                    break
+                f.write(chunk)
 
 
 def _get_voice_path(lang: str) -> tuple[Optional[Path], Optional[Path]]:
@@ -77,17 +89,13 @@ def _download_voice(lang: str) -> tuple[Path, Path]:
 
     try:
         # Download ONNX model
-        subprocess.run(
-            ["wget", "-q", "-O", str(onnx_path), onnx_url],
-            check=True, timeout=120
-        )
+        _download_file(onnx_url, onnx_path, timeout=120)
+
         # Download config JSON
-        subprocess.run(
-            ["wget", "-q", "-O", str(json_path), json_url],
-            check=True, timeout=30
-        )
+        _download_file(json_url, json_path, timeout=30)
+
         logger.info(f"Voice model '{model_name}' downloaded successfully.")
-    except subprocess.CalledProcessError as e:
+    except (urllib.error.URLError, OSError) as e:
         logger.error(f"Failed to download voice model '{model_name}': {e}")
         # Clean up partial downloads
         onnx_path.unlink(missing_ok=True)
