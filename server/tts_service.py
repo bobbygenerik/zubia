@@ -129,8 +129,8 @@ def synthesize(text: str, lang: str, speed: float = 1.0) -> bytes:
             # Not in memory, ensure it is downloaded/present
             try:
                 onnx_path, json_path = _download_voice(lang)
-            except Exception as e:
-                logger.error(f"Could not get voice model for '{lang}': {e}")
+            except Exception:
+                logger.exception(f"Could not get voice model for '{lang}'")
                 return _generate_silence(0.5)
 
             # Load and cache
@@ -153,8 +153,8 @@ def synthesize(text: str, lang: str, speed: float = 1.0) -> bytes:
         logger.debug(f"Synthesized {len(wav_bytes)} bytes for lang={lang}: '{text[:50]}...'")
         return wav_bytes
 
-    except Exception as e:
-        logger.error(f"TTS synthesis failed: {e}")
+    except Exception:
+        logger.exception("TTS synthesis failed")
         return _generate_silence(0.5)
 
 
