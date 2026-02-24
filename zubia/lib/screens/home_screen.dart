@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../theme.dart';
+import '../widgets/empty_chat_view.dart';
 import '../widgets/zubia_logo.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -145,11 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 28),
                 if (state.threads.isEmpty)
-                  const Expanded(
-                    child: Center(
-                      child: Text('No messages yet.\nStart a new chat below!', textAlign: TextAlign.center, style: TextStyle(color: ZubiaColors.textMuted)),
-                    ),
-                  )
+                  const Expanded(child: EmptyChatView())
                 else
                   Expanded(
                     child: ListView.separated(
