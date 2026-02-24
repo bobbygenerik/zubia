@@ -11,9 +11,12 @@ import time
 import logging
 from pathlib import Path
 from dataclasses import dataclass, field
+import os
 from typing import Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import secrets
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, status, Security, Query
+from fastapi.security import APIKeyHeader
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 
 # Configure logging
@@ -27,6 +30,23 @@ logger = logging.getLogger("voxbridge")
 # Application
 # ---------------------------------------------------------------------------
 app = FastAPI(title="Zubia", version="1.0.0")
+
+# Security Configuration
+API_KEY_NAME = "X-API-Key"
+API_KEY = os.getenv("ZUBIA_API_KEY")
+if not API_KEY:
+    raise RuntimeError("ZUBIA_API_KEY environment variable not set")
+
+api_key_header_scheme = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+
+async def get_api_key(key: str = Security(api_key_header_scheme)):
+    if key and secrets.compare_digest(key, API_KEY):
+        return key
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or missing API Key",
+    )
 
 @app.get("/")
 async def serve_root():
@@ -109,7 +129,7 @@ async def list_rooms():
 
 
 @app.post("/api/rooms")
-async def create_room(data: dict = {}):
+async def create_room(data: dict = {}, api_key: str = Depends(get_api_key)):
     """Create a new room."""
     room_id = str(uuid.uuid4())[:8]
     room_name = data.get("name", f"Room {room_id}")
@@ -122,7 +142,11 @@ async def create_room(data: dict = {}):
 # WebSocket Audio Pipeline
 # ---------------------------------------------------------------------------
 @app.websocket("/ws/{room_id}")
-async def websocket_endpoint(websocket: WebSocket, room_id: str):
+async def websocket_endpoint(websocket: WebSocket, room_id: str, token: str = Query(None)):
+    if not token or not secrets.compare_digest(token, API_KEY):
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     await websocket.accept()
 
     # Receive join message with user info
