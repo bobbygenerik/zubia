@@ -13,21 +13,25 @@ class ServerMessage {
 }
 
 /// WebSocket service for real-time communication with the Zubia backend.
+typedef WebSocketConnect = WebSocketChannel Function(Uri uri);
+
 class WebSocketService {
   final String baseUrl;
+  final WebSocketConnect _connect;
   WebSocketChannel? _channel;
   final _messageController = StreamController<ServerMessage>.broadcast();
   Map<String, dynamic>? _pendingAudioMeta;
   bool _connected = false;
 
-  WebSocketService({required this.baseUrl});
+  WebSocketService({required this.baseUrl, WebSocketConnect? connect})
+      : _connect = connect ?? ((uri) => WebSocketChannel.connect(uri));
 
   Stream<ServerMessage> get messages => _messageController.stream;
   bool get isConnected => _connected;
 
   void connect(String threadId, String userId) {
     final wsUrl = baseUrl.replaceFirst('http', 'ws');
-    _channel = WebSocketChannel.connect(Uri.parse('$wsUrl/ws/thread/$threadId'));
+    _channel = _connect(Uri.parse('$wsUrl/ws/thread/$threadId'));
 
     // Send join message
     _channel!.sink.add(jsonEncode({
