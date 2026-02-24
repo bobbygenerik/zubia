@@ -41,12 +41,16 @@ def wav_bytes_to_float32(wav_bytes: bytes) -> tuple[np.ndarray, int]:
             raw = wf.readframes(n_frames)
 
     # Convert to numpy based on sample width
-    if sampwidth == 2:
-        audio = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
-    elif sampwidth == 4:
-        audio = np.frombuffer(raw, dtype=np.int32).astype(np.float32) / 2147483648.0
-    else:
+    sample_width_map = {2: np.int16, 4: np.int32}
+
+    if sampwidth not in sample_width_map:
         raise ValueError(f"Unsupported sample width: {sampwidth}")
+
+    dtype = sample_width_map[sampwidth]
+    # Calculate normalization factor based on type range
+    # e.g. for int16, min is -32768, so we divide by 32768.0
+    max_val = float(abs(np.iinfo(dtype).min))
+    audio = np.frombuffer(raw, dtype=dtype).astype(np.float32) / max_val
 
     # Convert stereo to mono by averaging channels
     if n_channels == 2:
