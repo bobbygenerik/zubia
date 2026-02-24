@@ -13,6 +13,11 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
 
+import json
+import uvicorn
+from stt_service import transcribe, get_model
+from translate_service import translate as translate_text, get_supported_languages
+from tts_service import synthesize
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 
@@ -90,7 +95,6 @@ def get_room_lock(room_id: str) -> asyncio.Lock:
 @app.get("/api/languages")
 async def get_languages():
     """Return supported languages."""
-    from translate_service import get_supported_languages
     return JSONResponse(get_supported_languages())
 
 
@@ -172,7 +176,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
             if "text" in message:
                 # JSON control message
-                import json
                 data = json.loads(message["text"])
                 await handle_control_message(room, user, data)
 
@@ -252,7 +255,6 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
 
     try:
         # Step 1: Speech-to-Text
-        from stt_service import transcribe
         result = await asyncio.get_event_loop().run_in_executor(
             None, lambda: transcribe(audio_bytes, sender.language)
         )
@@ -276,8 +278,6 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
             pass
 
         # Step 2: Translate and synthesize for each listener
-        from translate_service import translate as translate_text
-        from tts_service import synthesize
 
         # Group listeners by target language to avoid duplicate work
         lang_groups: dict[str, list[User]] = {}
@@ -380,7 +380,6 @@ async def startup_event():
 
     # Pre-load the STT model in background
     async def preload():
-        from stt_service import get_model
         await asyncio.get_event_loop().run_in_executor(None, get_model)
         logger.info("STT model loaded.")
 
@@ -388,5 +387,4 @@ async def startup_event():
 
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
