@@ -306,8 +306,8 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
                     None, lambda tl=target_lang, tx=translated: synthesize(tx, tl)
                 )
 
-                # Send to all listeners with this language
-                for listener in listeners:
+                # Send to all listeners with this language concurrently
+                async def send_to_listener(listener):
                     try:
                         # Send metadata first
                         await listener.websocket.send_json({
@@ -322,6 +322,8 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
                         await listener.websocket.send_bytes(tts_audio)
                     except Exception as e:
                         logger.error(f"Failed to send audio to {listener.name}: {e}")
+
+                await asyncio.gather(*(send_to_listener(l) for l in listeners))
 
             except Exception as e:
                 logger.error(f"Pipeline failed for lang {target_lang}: {e}")
