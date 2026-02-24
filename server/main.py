@@ -91,14 +91,6 @@ class Room:
 # Global room registry
 rooms: dict[str, Room] = {}
 
-# Processing lock per room to prevent overlapping translations
-_room_locks: dict[str, asyncio.Lock] = {}
-
-
-def get_room_lock(room_id: str) -> asyncio.Lock:
-    if room_id not in _room_locks:
-        _room_locks[room_id] = asyncio.Lock()
-    return _room_locks[room_id]
 
 
 # ---------------------------------------------------------------------------
@@ -224,7 +216,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         # Remove empty rooms
         if room.user_count == 0:
             rooms.pop(room_id, None)
-            _room_locks.pop(room_id, None)
             logger.info(f"Room '{room_id}' removed (empty)")
 
 
