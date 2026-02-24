@@ -14,6 +14,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final _feedScroll = ScrollController();
+  int _lastFeedLength = 0;
 
   @override
   void initState() {
@@ -47,7 +48,10 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Consumer<AppState>(
       builder: (context, state, _) {
-        _scrollToBottom();
+        if (state.feed.length > _lastFeedLength) {
+          _scrollToBottom();
+        }
+        _lastFeedLength = state.feed.length;
 
         return Scaffold(
           body: SafeArea(
