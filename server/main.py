@@ -4,8 +4,6 @@ Main FastAPI application with WebSocket-based audio streaming and AI translation
 """
 
 import asyncio
-import io
-import wave
 import uuid
 import time
 import logging
