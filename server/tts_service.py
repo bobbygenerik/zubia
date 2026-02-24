@@ -6,7 +6,9 @@ Generates natural-sounding speech audio from text, per language.
 import io
 import wave
 import logging
-import subprocess
+import urllib.request
+import urllib.error
+import shutil
 import json
 from pathlib import Path
 from typing import Optional
@@ -75,19 +77,18 @@ def _download_voice(lang: str) -> tuple[Path, Path]:
 
     logger.info(f"Downloading Piper voice model: {model_name}...")
 
+    def _download_file(url: str, dest_path: Path, timeout: int):
+        with urllib.request.urlopen(url, timeout=timeout) as response, open(dest_path, "wb") as out_file:
+            shutil.copyfileobj(response, out_file)
+
     try:
         # Download ONNX model
-        subprocess.run(
-            ["wget", "-q", "-O", str(onnx_path), onnx_url],
-            check=True, timeout=120
-        )
+        _download_file(onnx_url, onnx_path, timeout=120)
         # Download config JSON
-        subprocess.run(
-            ["wget", "-q", "-O", str(json_path), json_url],
-            check=True, timeout=30
-        )
+        _download_file(json_url, json_path, timeout=30)
+
         logger.info(f"Voice model '{model_name}' downloaded successfully.")
-    except subprocess.CalledProcessError as e:
+    except (urllib.error.URLError, OSError) as e:
         logger.error(f"Failed to download voice model '{model_name}': {e}")
         # Clean up partial downloads
         onnx_path.unlink(missing_ok=True)
