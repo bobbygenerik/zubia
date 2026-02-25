@@ -4,17 +4,24 @@ Main FastAPI application with WebSocket-based audio streaming and AI translation
 """
 
 import asyncio
-import io
-import wave
 import uuid
 import time
 import logging
+import os
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
 
+import json
+import uvicorn
+from stt_service import transcribe, get_model
+from translate_service import translate as translate_text, get_supported_languages
+from tts_service import synthesize
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from pydantic import ValidationError
+
+from schemas import RoomCreate, UserJoin
 
 # Configure logging
 logging.basicConfig(
@@ -22,6 +29,17 @@ logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s"
 )
 logger = logging.getLogger("voxbridge")
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+APK_PATH = Path(
+    os.getenv(
+        "APK_PATH",
+        Path(__file__).parent.parent / "zubia/build/app/outputs/flutter-apk/app-release.apk"
+    )
+)
+
 
 # ---------------------------------------------------------------------------
 # Application
@@ -37,10 +55,9 @@ async def serve_root():
 @app.get("/download")
 async def download_apk():
     """Download the Flutter APK directly."""
-    apk_path = Path(__file__).parent.parent / "zubia/build/app/outputs/flutter-apk/app-release.apk"
-    if apk_path.exists():
+    if APK_PATH.exists():
         return FileResponse(
-            path=str(apk_path),
+            path=str(APK_PATH),
             filename="Zubia-App.apk",
             media_type="application/vnd.android.package-archive"
         )
@@ -74,14 +91,6 @@ class Room:
 # Global room registry
 rooms: dict[str, Room] = {}
 
-# Processing lock per room to prevent overlapping translations
-_room_locks: dict[str, asyncio.Lock] = {}
-
-
-def get_room_lock(room_id: str) -> asyncio.Lock:
-    if room_id not in _room_locks:
-        _room_locks[room_id] = asyncio.Lock()
-    return _room_locks[room_id]
 
 
 # ---------------------------------------------------------------------------
@@ -90,7 +99,6 @@ def get_room_lock(room_id: str) -> asyncio.Lock:
 @app.get("/api/languages")
 async def get_languages():
     """Return supported languages."""
-    from translate_service import get_supported_languages
     return JSONResponse(get_supported_languages())
 
 
@@ -109,10 +117,10 @@ async def list_rooms():
 
 
 @app.post("/api/rooms")
-async def create_room(data: dict = {}):
+async def create_room(data: RoomCreate):
     """Create a new room."""
     room_id = str(uuid.uuid4())[:8]
-    room_name = data.get("name", f"Room {room_id}")
+    room_name = data.name if data.name else f"Room {room_id}"
     rooms[room_id] = Room(id=room_id, name=room_name)
     logger.info(f"Room created: {room_id} ({room_name})")
     return JSONResponse({"id": room_id, "name": room_name})
@@ -134,8 +142,15 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         return
 
     user_id = str(uuid.uuid4())[:8]
-    user_name = join_msg.get("name", f"User-{user_id}")
-    user_lang = join_msg.get("language", "en")
+
+    try:
+        user_data = UserJoin(**join_msg)
+        user_name = user_data.name if user_data.name else f"User-{user_id}"
+        user_lang = user_data.language
+    except ValidationError as e:
+        logger.error(f"Invalid join message: {e}")
+        await websocket.close(code=4002, reason="Invalid join data")
+        return
 
     # Create room if it doesn't exist
     if room_id not in rooms:
@@ -172,7 +187,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
             if "text" in message:
                 # JSON control message
-                import json
                 data = json.loads(message["text"])
                 await handle_control_message(room, user, data)
 
@@ -202,7 +216,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         # Remove empty rooms
         if room.user_count == 0:
             rooms.pop(room_id, None)
-            _room_locks.pop(room_id, None)
             logger.info(f"Room '{room_id}' removed (empty)")
 
 
@@ -302,7 +315,6 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
 
     try:
         # Step 1: Speech-to-Text
-        from stt_service import transcribe
         result = await asyncio.get_event_loop().run_in_executor(
             None, lambda: transcribe(audio_bytes, sender.language)
         )
@@ -336,7 +348,7 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
                 lang_groups[lang] = []
             lang_groups[lang].append(listener)
 
-        # Process all language groups in parallel
+        # Process all language groups in parallel using the shared helper
         await asyncio.gather(*(
             process_language_group(lang, listeners, text, detected_lang, sender.name)
             for lang, listeners in lang_groups.items()
@@ -390,7 +402,6 @@ async def startup_event():
 
     # Pre-load the STT model in background
     async def preload():
-        from stt_service import get_model
         await asyncio.get_event_loop().run_in_executor(None, get_model)
         logger.info("STT model loaded.")
 
@@ -398,5 +409,4 @@ async def startup_event():
 
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

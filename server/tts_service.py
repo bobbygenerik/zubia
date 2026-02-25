@@ -160,16 +160,18 @@ def synthesize(text: str, lang: str, speed: float = 1.0) -> bytes:
 
 def _generate_silence(duration_seconds: float, sample_rate: int = 22050) -> bytes:
     """Generate silent WAV audio of the specified duration."""
-    import numpy as np
+    # Avoid depending on numpy for silence generation to keep this function
+    # deterministic and lightweight during testing and runtime.
     n_samples = int(duration_seconds * sample_rate)
-    silence = np.zeros(n_samples, dtype=np.int16)
+    # 16-bit PCM silence is just zero bytes (little-endian): 2 bytes per sample
+    silence_bytes = (b"\x00\x00") * n_samples
 
     buf = io.BytesIO()
     with wave.open(buf, "wb") as wf:
         wf.setnchannels(1)
         wf.setsampwidth(2)
         wf.setframerate(sample_rate)
-        wf.writeframes(silence.tobytes())
+        wf.writeframes(silence_bytes)
 
     return buf.getvalue()
 
