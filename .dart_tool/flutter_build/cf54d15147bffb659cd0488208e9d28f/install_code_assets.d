@@ -1,0 +1,1 @@
+ /home/ubuntu/projects/zubia/.dart_tool/flutter_build/cf54d15147bffb659cd0488208e9d28f/native_assets.json: 
