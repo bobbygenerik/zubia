@@ -4,16 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'theme.dart';
+import 'config.dart';
 import 'providers/app_state.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_chat_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/history_screen.dart';
-
-// ── Server Configuration ─────────────────────────
-// Change this to your VPS IP/domain
-const String kServerUrl = 'http://15.204.95.57';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,7 +42,7 @@ class ZubiaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AppState(serverUrl: kServerUrl),
+      create: (_) => AppState(serverUrl: Config.serverUrl),
       child: MaterialApp.router(
         title: 'Zubia',
         debugShowCheckedModeBanner: false,

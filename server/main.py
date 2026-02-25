@@ -4,20 +4,25 @@ Main FastAPI application with WebSocket-based audio streaming and AI translation
 """
 
 import asyncio
-import io
-import wave
+import uuid
+import asyncio
 import uuid
 import time
 import logging
+import os
+import json
+import secrets
 from pathlib import Path
 from dataclasses import dataclass, field
-import os
 from typing import Optional
-
-import secrets
+import uvicorn
+from stt_service import transcribe, get_model
+from translate_service import translate as translate_text, get_supported_languages
+from tts_service import synthesize
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, status, Security, Query
 from fastapi.security import APIKeyHeader
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from schemas import RoomCreate, UserJoin
 
 # Configure logging
 logging.basicConfig(
@@ -25,6 +30,17 @@ logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s"
 )
 logger = logging.getLogger("voxbridge")
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+APK_PATH = Path(
+    os.getenv(
+        "APK_PATH",
+        Path(__file__).parent.parent / "zubia/build/app/outputs/flutter-apk/app-release.apk"
+    )
+)
+
 
 # ---------------------------------------------------------------------------
 # Application
@@ -57,10 +73,9 @@ async def serve_root():
 @app.get("/download")
 async def download_apk():
     """Download the Flutter APK directly."""
-    apk_path = Path(__file__).parent.parent / "zubia/build/app/outputs/flutter-apk/app-release.apk"
-    if apk_path.exists():
+    if APK_PATH.exists():
         return FileResponse(
-            path=str(apk_path),
+            path=str(APK_PATH),
             filename="Zubia-App.apk",
             media_type="application/vnd.android.package-archive"
         )
@@ -94,14 +109,6 @@ class Room:
 # Global room registry
 rooms: dict[str, Room] = {}
 
-# Processing lock per room to prevent overlapping translations
-_room_locks: dict[str, asyncio.Lock] = {}
-
-
-def get_room_lock(room_id: str) -> asyncio.Lock:
-    if room_id not in _room_locks:
-        _room_locks[room_id] = asyncio.Lock()
-    return _room_locks[room_id]
 
 
 # ---------------------------------------------------------------------------
@@ -110,7 +117,6 @@ def get_room_lock(room_id: str) -> asyncio.Lock:
 @app.get("/api/languages")
 async def get_languages():
     """Return supported languages."""
-    from translate_service import get_supported_languages
     return JSONResponse(get_supported_languages())
 
 
@@ -129,10 +135,10 @@ async def list_rooms():
 
 
 @app.post("/api/rooms")
-async def create_room(data: dict = {}, api_key: str = Depends(get_api_key)):
+async def create_room(data: RoomCreate, api_key: str = Depends(get_api_key)):
     """Create a new room."""
     room_id = str(uuid.uuid4())[:8]
-    room_name = data.get("name", f"Room {room_id}")
+    room_name = data.name if data.name else f"Room {room_id}"
     rooms[room_id] = Room(id=room_id, name=room_name)
     logger.info(f"Room created: {room_id} ({room_name})")
     return JSONResponse({"id": room_id, "name": room_name})
@@ -158,8 +164,15 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str, token: str = Qu
         return
 
     user_id = str(uuid.uuid4())[:8]
-    user_name = join_msg.get("name", f"User-{user_id}")
-    user_lang = join_msg.get("language", "en")
+
+    try:
+        user_data = UserJoin(**join_msg)
+        user_name = user_data.name if user_data.name else f"User-{user_id}"
+        user_lang = user_data.language
+    except ValidationError as e:
+        logger.error(f"Invalid join message: {e}")
+        await websocket.close(code=4002, reason="Invalid join data")
+        return
 
     # Create room if it doesn't exist
     if room_id not in rooms:
@@ -176,89 +189,88 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str, token: str = Qu
         "type": "user_joined",
         "userId": user_id,
         "userName": user_name,
-        "language": user_lang,
-        "users": get_user_list(room),
-    })
+        @app.websocket("/ws/{room_id}")
+        async def websocket_endpoint(websocket: WebSocket, room_id: str, token: Optional[str] = Query(None)):
+            # Require a token that matches the API key for websocket joins
+            if not token or not secrets.compare_digest(token, API_KEY):
+                await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+                return
 
-    # Send confirmation to the joining user
-    await websocket.send_json({
-        "type": "joined",
-        "userId": user_id,
-        "roomId": room_id,
-        "roomName": room.name,
-        "users": get_user_list(room),
-    })
+            await websocket.accept()
 
-    try:
-        while True:
-            # Receive messages (can be JSON control messages or binary audio)
-            message = await websocket.receive()
+            # Receive join message with user info
+            try:
+                join_msg = await asyncio.wait_for(websocket.receive_json(), timeout=10)
+            except (asyncio.TimeoutError, Exception) as e:
+                logger.error(f"Failed to receive join message: {e}")
+                await websocket.close(code=4000, reason="Join timeout")
+                return
 
-            if "text" in message:
-                # JSON control message
-                import json
-                data = json.loads(message["text"])
-                await handle_control_message(room, user, data)
+            user_id = str(uuid.uuid4())[:8]
 
-            elif "bytes" in message:
-                # Binary audio data
-                audio_bytes = message["bytes"]
-                if not user.is_muted and len(audio_bytes) > 100:
-                    # Process audio in a background task to not block receiving
-                    asyncio.create_task(
-                        process_audio(room, user, audio_bytes)
-                    )
+            try:
+                user_data = UserJoin(**join_msg)
+                user_name = user_data.name if user_data.name else f"User-{user_id}"
+                user_lang = user_data.language
+            except ValidationError as e:
+                logger.error(f"Invalid join message: {e}")
+                await websocket.close(code=4002, reason="Invalid join data")
+                return
 
-    except WebSocketDisconnect:
-        logger.info(f"User '{user_name}' disconnected from room '{room_id}'")
-    except Exception as e:
-        logger.error(f"WebSocket error for user '{user_name}': {e}")
-    finally:
-        # Clean up
-        room.users.pop(user_id, None)
-        await broadcast_system(room, {
-            "type": "user_left",
-            "userId": user_id,
-            "userName": user_name,
-            "users": get_user_list(room),
-        })
+            # Create room if it doesn't exist
+            if room_id not in rooms:
+                rooms[room_id] = Room(id=room_id, name=f"Room {room_id}")
 
-        # Remove empty rooms
-        if room.user_count == 0:
-            rooms.pop(room_id, None)
-            _room_locks.pop(room_id, None)
-            logger.info(f"Room '{room_id}' removed (empty)")
+            room = rooms[room_id]
+            user = User(id=user_id, name=user_name, language=user_lang, websocket=websocket)
+            room.users[user_id] = user
 
+            logger.info(f"User '{user_name}' ({user_lang}) joined room '{room_id}' [{room.user_count} users]")
 
-async def handle_control_message(room: Room, user: User, data: dict):
-    """Handle JSON control messages from clients."""
-    msg_type = data.get("type")
+            # Notify everyone about the new user
+            await broadcast_system(room, {
+                "type": "user_joined",
+                "userId": user_id,
+                "userName": user_name,
+                "language": user_lang,
+                "users": get_user_list(room),
+            })
 
-    if msg_type == "mute":
-        user.is_muted = True
-        await broadcast_system(room, {
-            "type": "user_muted",
-            "userId": user.id,
-            "userName": user.name,
-        })
+            # Send confirmation to the joining user
+            await websocket.send_json({
+                "type": "joined",
+                "userId": user_id,
+                "roomId": room_id,
+                "roomName": room.name,
+                "users": get_user_list(room),
+            })
 
-    elif msg_type == "unmute":
-        user.is_muted = False
-        await broadcast_system(room, {
-            "type": "user_unmuted",
-            "userId": user.id,
-            "userName": user.name,
-        })
+            try:
+                while True:
+                    # Receive messages (can be JSON control messages or binary audio)
+                    message = await websocket.receive()
 
-    elif msg_type == "change_language":
-        new_lang = data.get("language", user.language)
-        user.language = new_lang
-        await broadcast_system(room, {
-            "type": "user_language_changed",
-            "userId": user.id,
-            "userName": user.name,
-            "language": new_lang,
-            "users": get_user_list(room),
+                    if isinstance(message, dict) and "text" in message:
+                        # JSON control message
+                        data = json.loads(message["text"])
+                        await handle_control_message(room, user, data)
+
+                    elif isinstance(message, dict) and "bytes" in message:
+                        # Binary audio data
+                        audio_bytes = message["bytes"]
+                        if not user.is_muted and len(audio_bytes) > 100:
+                            # Process audio in a background task to not block receiving
+                            asyncio.create_task(
+                                process_audio(room, user, audio_bytes)
+                            )
+
+            except WebSocketDisconnect:
+                logger.info(f"User '{user_name}' disconnected from room '{room_id}'")
+            except Exception as e:
+                logger.error(f"WebSocket error for user '{user_name}': {e}")
+            finally:
+                # Clean up
+                room.users.pop(user_id, None)
         })
         logger.info(f"User '{user.name}' changed language to '{new_lang}'")
 
@@ -276,7 +288,6 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
 
     try:
         # Step 1: Speech-to-Text
-        from stt_service import transcribe
         result = await asyncio.get_event_loop().run_in_executor(
             None, lambda: transcribe(audio_bytes, sender.language)
         )
@@ -300,8 +311,6 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
             pass
 
         # Step 2: Translate and synthesize for each listener
-        from translate_service import translate as translate_text
-        from tts_service import synthesize
 
         # Group listeners by target language to avoid duplicate work
         lang_groups: dict[str, list[User]] = {}
@@ -330,8 +339,8 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
                     None, lambda tl=target_lang, tx=translated: synthesize(tx, tl)
                 )
 
-                # Send to all listeners with this language
-                for listener in listeners:
+                # Send to all listeners with this language concurrently
+                async def send_to_listener(listener):
                     try:
                         # Send metadata first
                         await listener.websocket.send_json({
@@ -346,6 +355,8 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
                         await listener.websocket.send_bytes(tts_audio)
                     except Exception as e:
                         logger.error(f"Failed to send audio to {listener.name}: {e}")
+
+                await asyncio.gather(*(send_to_listener(l) for l in listeners))
 
             except Exception as e:
                 logger.error(f"Pipeline failed for lang {target_lang}: {e}")
@@ -404,7 +415,6 @@ async def startup_event():
 
     # Pre-load the STT model in background
     async def preload():
-        from stt_service import get_model
         await asyncio.get_event_loop().run_in_executor(None, get_model)
         logger.info("STT model loaded.")
 
@@ -412,5 +422,4 @@ async def startup_event():
 
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
