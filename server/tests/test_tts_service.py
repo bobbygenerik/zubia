@@ -33,6 +33,10 @@ class TestTTSService(unittest.TestCase):
     def setUp(self):
         # Reset synthesizers cache before each test
         tts_service._synthesizers = {}
+        # Reset LRU cache if exists
+        if hasattr(tts_service, "_inner_synthesize"):
+            tts_service._inner_synthesize.cache_clear()
+
         # Reset mocks
         mock_piper.reset_mock()
         mock_numpy.reset_mock()
