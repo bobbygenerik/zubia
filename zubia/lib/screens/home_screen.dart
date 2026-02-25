@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../theme.dart';
+import '../widgets/nav_item.dart';
 import '../widgets/zubia_logo.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -217,8 +218,8 @@ class _BottomNav extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _NavItem(icon: Icons.chat_bubble_outline, label: 'Chats', active: currentIndex == 0, onTap: () => context.go('/home')),
-            _NavItem(icon: Icons.history, label: 'History', active: currentIndex == 1, onTap: () => context.go('/history')),
+            ZubiaNavItem(icon: Icons.chat_bubble_outline, label: 'Chats', active: currentIndex == 0, onTap: () => context.go('/home')),
+            ZubiaNavItem(icon: Icons.history, label: 'History', active: currentIndex == 1, onTap: () => context.go('/history')),
             Container(
               width: 44,
               height: 44,
@@ -231,7 +232,7 @@ class _BottomNav extends StatelessWidget {
               ),
               child: const SizedBox(width: 36, height: 36, child: ZubiaLogo()),
             ),
-            _NavItem(
+            ZubiaNavItem(
                 icon: Icons.favorite_outline,
                 label: 'Saved',
                 active: currentIndex == 2,
@@ -239,7 +240,7 @@ class _BottomNav extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Saved items coming soon!')));
                 }),
-            _NavItem(
+            ZubiaNavItem(
                 icon: Icons.settings_outlined,
                 label: 'Settings',
                 active: currentIndex == 3,
@@ -248,51 +249,6 @@ class _BottomNav extends StatelessWidget {
                       const SnackBar(content: Text('Settings coming soon!')));
                 }),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-  const _NavItem(
-      {required this.icon,
-      required this.label,
-      required this.active,
-      required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: label,
-      selected: active,
-      child: Tooltip(
-        message: label,
-        child: GestureDetector(
-          onTap: onTap,
-          behavior: HitTestBehavior.opaque,
-          child: ExcludeSemantics(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 24,
-                    color: active ? ZubiaColors.magenta : ZubiaColors.textMuted),
-                const SizedBox(height: 2),
-                Text(label,
-                    style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: active
-                            ? ZubiaColors.magenta
-                            : ZubiaColors.textMuted)),
-              ],
-            ),
-          ),
         ),
       ),
     );
