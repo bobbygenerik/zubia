@@ -8,6 +8,7 @@ import wave
 import logging
 import subprocess
 import json
+import functools
 from pathlib import Path
 from typing import Optional
 
@@ -117,45 +118,47 @@ def synthesize(text: str, lang: str, speed: float = 1.0) -> bytes:
         return _generate_silence(0.5)
 
     try:
-        # Optimization: Check in-memory cache first to avoid file I/O and logging
-        onnx_path_candidate = _get_voice_path(lang)[0]
-        cache_key = str(onnx_path_candidate)
-
-        from piper import PiperVoice
-
-        if cache_key in _synthesizers:
-            voice = _synthesizers[cache_key]
-        else:
-            # Not in memory, ensure it is downloaded/present
-            try:
-                onnx_path, json_path = _download_voice(lang)
-            except Exception as e:
-                logger.error(f"Could not get voice model for '{lang}': {e}")
-                return _generate_silence(0.5)
-
-            # Load and cache
-            cache_key = str(onnx_path)
-            if cache_key not in _synthesizers:
-                logger.info(f"Loading Piper voice: {onnx_path.name}")
-                _synthesizers[cache_key] = PiperVoice.load(str(onnx_path), str(json_path))
-
-            voice = _synthesizers[cache_key]
-
-        # Synthesize to WAV in memory
-        wav_buffer = io.BytesIO()
-        with wave.open(wav_buffer, "wb") as wav_file:
-            wav_file.setnchannels(1)
-            wav_file.setsampwidth(2)
-            wav_file.setframerate(voice.config.sample_rate)
-            voice.synthesize(text, wav_file, length_scale=1.0 / speed)
-
-        wav_bytes = wav_buffer.getvalue()
-        logger.debug(f"Synthesized {len(wav_bytes)} bytes for lang={lang}: '{text[:50]}...'")
-        return wav_bytes
-
+        return _inner_synthesize(text, lang, speed)
     except Exception as e:
         logger.error(f"TTS synthesis failed: {e}")
         return _generate_silence(0.5)
+
+
+@functools.lru_cache(maxsize=128)
+def _inner_synthesize(text: str, lang: str, speed: float) -> bytes:
+    """Cached internal synthesis function."""
+    # Optimization: Check in-memory cache first to avoid file I/O and logging
+    onnx_path_candidate = _get_voice_path(lang)[0]
+    cache_key = str(onnx_path_candidate)
+
+    from piper import PiperVoice
+
+    if cache_key in _synthesizers:
+        voice = _synthesizers[cache_key]
+    else:
+        # Not in memory, ensure it is downloaded/present
+        # If download fails, we let the exception propagate so it's not cached
+        onnx_path, json_path = _download_voice(lang)
+
+        # Load and cache
+        cache_key = str(onnx_path)
+        if cache_key not in _synthesizers:
+            logger.info(f"Loading Piper voice: {onnx_path.name}")
+            _synthesizers[cache_key] = PiperVoice.load(str(onnx_path), str(json_path))
+
+        voice = _synthesizers[cache_key]
+
+    # Synthesize to WAV in memory
+    wav_buffer = io.BytesIO()
+    with wave.open(wav_buffer, "wb") as wav_file:
+        wav_file.setnchannels(1)
+        wav_file.setsampwidth(2)
+        wav_file.setframerate(voice.config.sample_rate)
+        voice.synthesize(text, wav_file, length_scale=1.0 / speed)
+
+    wav_bytes = wav_buffer.getvalue()
+    logger.debug(f"Synthesized {len(wav_bytes)} bytes for lang={lang}: '{text[:50]}...'")
+    return wav_bytes
 
 
 def _generate_silence(duration_seconds: float, sample_rate: int = 22050) -> bytes:
