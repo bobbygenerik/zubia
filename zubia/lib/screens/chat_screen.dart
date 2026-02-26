@@ -212,23 +212,37 @@ class _ControlsBar extends StatelessWidget {
           // Volume
           Row(
             children: [
-              const Icon(Icons.volume_down, size: 18, color: ZubiaColors.textMuted),
+              IconButton(
+                icon: const Icon(Icons.volume_mute, size: 20, color: ZubiaColors.textMuted),
+                tooltip: 'Mute',
+                onPressed: () => state.setVolume(0.0),
+              ),
               Expanded(
-                child: SliderTheme(
-                  data: SliderThemeData(
-                    activeTrackColor: ZubiaColors.magenta,
-                    inactiveTrackColor: Colors.white.withValues(alpha: 0.08),
-                    thumbColor: ZubiaColors.magenta,
-                    overlayColor: ZubiaColors.magenta.withValues(alpha: 0.1),
-                    trackHeight: 3,
-                  ),
-                  child: Slider(
-                    value: state.volume,
-                    onChanged: (v) => state.setVolume(v),
+                child: Semantics(
+                  label: 'Volume',
+                  value: '${(state.volume * 100).round()}%',
+                  slider: true,
+                  child: SliderTheme(
+                    data: SliderThemeData(
+                      activeTrackColor: ZubiaColors.magenta,
+                      inactiveTrackColor: Colors.white.withValues(alpha: 0.08),
+                      thumbColor: ZubiaColors.magenta,
+                      overlayColor: ZubiaColors.magenta.withValues(alpha: 0.1),
+                      trackHeight: 3,
+                    ),
+                    child: Slider(
+                      value: state.volume,
+                      label: '${(state.volume * 100).round()}%',
+                      onChanged: (v) => state.setVolume(v),
+                    ),
                   ),
                 ),
               ),
-              const Icon(Icons.volume_up, size: 18, color: ZubiaColors.textMuted),
+              IconButton(
+                icon: const Icon(Icons.volume_up, size: 20, color: ZubiaColors.textMuted),
+                tooltip: 'Max volume',
+                onPressed: () => state.setVolume(1.0),
+              ),
             ],
           ),
         ],
