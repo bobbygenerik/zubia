@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../providers/app_state.dart';
@@ -294,7 +295,10 @@ class _ModeToggle extends StatelessWidget {
                   child: Tooltip(
                     message: 'Switch to Real-time mode',
                     child: GestureDetector(
-                      onTap: () => state.setMode('realtime'),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        state.setMode('realtime');
+                      },
                       child: Center(
                         child: Text('Real-time', style: TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w600,
@@ -313,7 +317,10 @@ class _ModeToggle extends StatelessWidget {
                   child: Tooltip(
                     message: 'Switch to Walkie-talkie mode',
                     child: GestureDetector(
-                      onTap: () => state.setMode('walkie'),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        state.setMode('walkie');
+                      },
                       child: Center(
                         child: Text('Walkie-talkie', style: TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w600,
@@ -359,14 +366,21 @@ class _MicButton extends StatelessWidget {
         message: semanticHint,
         child: GestureDetector(
           onTap: isWalkie ? null : () {
+            HapticFeedback.selectionClick();
             if (recording) {
               state.stopRecording();
             } else {
               state.startRealtimeRecording();
             }
           },
-          onLongPressStart: isWalkie ? (_) => state.startWalkieRecording() : null,
-          onLongPressEnd: isWalkie ? (_) => state.stopWalkieAndSend() : null,
+          onLongPressStart: isWalkie ? (_) {
+            HapticFeedback.mediumImpact();
+            state.startWalkieRecording();
+          } : null,
+          onLongPressEnd: isWalkie ? (_) {
+            HapticFeedback.lightImpact();
+            state.stopWalkieAndSend();
+          } : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: 72,
