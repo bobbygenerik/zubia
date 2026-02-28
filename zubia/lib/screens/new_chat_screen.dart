@@ -79,6 +79,16 @@ class _NewChatScreenState extends State<NewChatScreen> {
               decoration: InputDecoration(
                 hintText: 'Search users...',
                 prefixIcon: const Icon(Icons.search, color: ZubiaColors.textMuted),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, color: ZubiaColors.textMuted, size: 20),
+                        tooltip: 'Clear search',
+                        onPressed: () {
+                          _searchController.clear();
+                          _filter('');
+                        },
+                      )
+                    : null,
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.05),
                 border: OutlineInputBorder(
@@ -92,7 +102,16 @@ class _NewChatScreenState extends State<NewChatScreen> {
             child: _isLoading 
               ? const Center(child: CircularProgressIndicator(color: ZubiaColors.magenta))
               : _filteredUsers.isEmpty
-                ? const Center(child: Text('No users found.', style: TextStyle(color: ZubiaColors.textMuted)))
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off, size: 48, color: ZubiaColors.textMuted.withValues(alpha: 0.5)),
+                        const SizedBox(height: 16),
+                        const Text('No users found', style: TextStyle(color: ZubiaColors.textMuted, fontSize: 16)),
+                      ],
+                    ),
+                  )
                 : ListView.builder(
                     itemCount: _filteredUsers.length,
                     itemBuilder: (context, index) {
