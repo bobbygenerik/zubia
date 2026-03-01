@@ -29,7 +29,13 @@ class ChatAppBar extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(state.otherUserName ?? 'Chat', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                Text(
+                  state.otherUserName ?? 'Chat',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Row(
                   children: [
@@ -37,7 +43,10 @@ class ChatAppBar extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       _statusLabel(state.connectionStatus),
-                      style: const TextStyle(fontSize: 12, color: ZubiaColors.textSecondary),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: ZubiaColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -51,11 +60,16 @@ class ChatAppBar extends StatelessWidget {
 
   String _statusLabel(String status) {
     switch (status) {
-      case 'connected': return 'Connected';
-      case 'recording': return 'Recording...';
-      case 'processing': return 'Translating...';
-      case 'connecting': return 'Connecting...';
-      default: return 'Disconnected';
+      case 'connected':
+        return 'Connected';
+      case 'recording':
+        return 'Recording...';
+      case 'processing':
+        return 'Translating...';
+      case 'connecting':
+        return 'Connecting...';
+      default:
+        return 'Disconnected';
     }
   }
 }
@@ -68,11 +82,22 @@ class _StatusDot extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     switch (status) {
-      case 'connected': color = ZubiaColors.success; break;
-      case 'recording': color = ZubiaColors.danger; break;
-      case 'processing': color = ZubiaColors.warning; break;
-      default: color = ZubiaColors.textMuted;
+      case 'connected':
+        color = ZubiaColors.success;
+        break;
+      case 'recording':
+        color = ZubiaColors.danger;
+        break;
+      case 'processing':
+        color = ZubiaColors.warning;
+        break;
+      default:
+        color = ZubiaColors.textMuted;
     }
-    return Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
   }
 }

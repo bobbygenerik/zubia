@@ -44,7 +44,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (name.isEmpty) return;
     final state = context.read<AppState>();
     setState(() => _isLoading = true);
-    await state.registerAndSaveIdentity(name, state.userLanguage.isNotEmpty ? state.userLanguage : 'en');
+    await state.registerAndSaveIdentity(
+      name,
+      state.userLanguage.isNotEmpty ? state.userLanguage : 'en',
+    );
     await state.loadThreads();
     if (mounted) setState(() => _isLoading = false);
   }
@@ -53,7 +56,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: ZubiaColors.magenta)),
+        body: Center(
+          child: CircularProgressIndicator(color: ZubiaColors.magenta),
+        ),
       );
     }
 
@@ -78,9 +83,17 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Create Your Profile', textAlign: TextAlign.center, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          const Text(
+            'Create Your Profile',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
-          const Text('Enter your name and primary language to get started.', textAlign: TextAlign.center, style: TextStyle(color: ZubiaColors.textSecondary)),
+          const Text(
+            'Enter your name and primary language to get started.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: ZubiaColors.textSecondary),
+          ),
           const SizedBox(height: 32),
           TextField(
             controller: _nameController,
@@ -93,7 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            initialValue: state.userLanguage.isNotEmpty ? state.userLanguage : 'en',
+            initialValue: state.userLanguage.isNotEmpty
+                ? state.userLanguage
+                : 'en',
             dropdownColor: ZubiaColors.charcoalLight,
             decoration: const InputDecoration(
               labelText: 'Language',
@@ -112,7 +127,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const Spacer(),
           ElevatedButton(
-            onPressed: _nameController.text.trim().isNotEmpty ? _saveIdentity : null,
+            onPressed: _nameController.text.trim().isNotEmpty
+                ? _saveIdentity
+                : null,
             child: const Text('Continue'),
           ),
           const SizedBox(height: 32),
@@ -137,9 +154,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Chats', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+                        const Text(
+                          'Chats',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text('Logged in as ${state.userName}', style: const TextStyle(fontSize: 14, color: ZubiaColors.textSecondary)),
+                        Text(
+                          'Logged in as ${state.userName}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: ZubiaColors.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -148,29 +177,54 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (state.threads.isEmpty)
                   const Expanded(
                     child: Center(
-                      child: Text('No messages yet.\nStart a new chat below!', textAlign: TextAlign.center, style: TextStyle(color: ZubiaColors.textMuted)),
+                      child: Text(
+                        'No messages yet.\nStart a new chat below!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: ZubiaColors.textMuted),
+                      ),
                     ),
                   )
                 else
                   Expanded(
                     child: ListView.separated(
                       itemCount: state.threads.length,
-                      separatorBuilder: (context, index) => const Divider(color: ZubiaColors.glassBorder, height: 1),
+                      separatorBuilder: (context, index) => const Divider(
+                        color: ZubiaColors.glassBorder,
+                        height: 1,
+                      ),
                       itemBuilder: (context, index) {
                         final thread = state.threads[index];
                         return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                          ),
                           leading: CircleAvatar(
-                            backgroundColor: ZubiaColors.magenta.withValues(alpha: 0.1),
+                            backgroundColor: ZubiaColors.magenta.withValues(
+                              alpha: 0.1,
+                            ),
                             child: Text(
-                              state.getFlagEmoji(thread['otherUserLanguage'] ?? 'en'),
+                              state.getFlagEmoji(
+                                thread['otherUserLanguage'] ?? 'en',
+                              ),
                               style: const TextStyle(fontSize: 20),
                             ),
                           ),
-                          title: Text(thread['otherUserName'] ?? 'Unknown User', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text('Tap to join chat', style: TextStyle(color: ZubiaColors.textSecondary, fontSize: 13)),
+                          title: Text(
+                            thread['otherUserName'] ?? 'Unknown User',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            'Tap to join chat',
+                            style: TextStyle(
+                              color: ZubiaColors.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
                           onTap: () {
-                            state.joinThread(thread['id'], thread['otherUserName']);
+                            state.joinThread(
+                              thread['id'],
+                              thread['otherUserName'],
+                            );
                             context.go('/chat');
                           },
                         );
@@ -184,13 +238,13 @@ class _HomeScreenState extends State<HomeScreen> {
         Padding(
           padding: const EdgeInsets.all(20),
           child: SizedBox(
-             width: double.infinity,
-             height: 50,
-             child: ElevatedButton.icon(
-               onPressed: () => context.go('/new_chat'),
-               icon: const Icon(Icons.add_comment),
-               label: const Text('Start New Chat'),
-             ),
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: () => context.go('/new_chat'),
+              icon: const Icon(Icons.add_comment),
+              label: const Text('Start New Chat'),
+            ),
           ),
         ),
         const _BottomNav(currentIndex: 0),
@@ -218,8 +272,18 @@ class _BottomNav extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            ZubiaNavItem(icon: Icons.chat_bubble_outline, label: 'Chats', active: currentIndex == 0, onTap: () => context.go('/home')),
-            ZubiaNavItem(icon: Icons.history, label: 'History', active: currentIndex == 1, onTap: () => context.go('/history')),
+            ZubiaNavItem(
+              icon: Icons.chat_bubble_outline,
+              label: 'Chats',
+              active: currentIndex == 0,
+              onTap: () => context.go('/home'),
+            ),
+            ZubiaNavItem(
+              icon: Icons.history,
+              label: 'History',
+              active: currentIndex == 1,
+              onTap: () => context.go('/history'),
+            ),
             Container(
               width: 44,
               height: 44,
@@ -227,27 +291,39 @@ class _BottomNav extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: ZubiaColors.charcoalDark,
-                border: Border.all(color: ZubiaColors.magenta.withValues(alpha: 0.2), width: 2),
-                boxShadow: [BoxShadow(color: ZubiaColors.magenta.withValues(alpha: 0.15), blurRadius: 16)],
+                border: Border.all(
+                  color: ZubiaColors.magenta.withValues(alpha: 0.2),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: ZubiaColors.magenta.withValues(alpha: 0.15),
+                    blurRadius: 16,
+                  ),
+                ],
               ),
               child: const SizedBox(width: 36, height: 36, child: ZubiaLogo()),
             ),
             ZubiaNavItem(
-                icon: Icons.favorite_outline,
-                label: 'Saved',
-                active: currentIndex == 2,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Saved items coming soon!')));
-                }),
+              icon: Icons.favorite_outline,
+              label: 'Saved',
+              active: currentIndex == 2,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Saved items coming soon!')),
+                );
+              },
+            ),
             ZubiaNavItem(
-                icon: Icons.settings_outlined,
-                label: 'Settings',
-                active: currentIndex == 3,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Settings coming soon!')));
-                }),
+              icon: Icons.settings_outlined,
+              label: 'Settings',
+              active: currentIndex == 3,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Settings coming soon!')),
+                );
+              },
+            ),
           ],
         ),
       ),

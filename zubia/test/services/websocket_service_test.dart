@@ -127,7 +127,7 @@ void main() {
     final metaData = {
       'type': 'translated_audio_meta',
       'id': 'msg-1',
-      'language': 'es'
+      'language': 'es',
     };
 
     final futureMeta = service.messages.first;
@@ -154,8 +154,8 @@ void main() {
       fakeChannel.outgoingStream,
       emitsInOrder([
         anything, // Join message
-        bytes
-      ])
+        bytes,
+      ]),
     );
 
     service.connect('thread-1', 'user-1');
@@ -172,10 +172,10 @@ void main() {
       emitsInOrder([
         anything, // Join message
         predicate((msg) {
-           final decoded = jsonDecode(msg as String);
-           return decoded['type'] == 'stop_speaking';
-        })
-      ])
+          final decoded = jsonDecode(msg as String);
+          return decoded['type'] == 'stop_speaking';
+        }),
+      ]),
     );
 
     service.connect('thread-1', 'user-1');
@@ -194,29 +194,29 @@ void main() {
   });
 
   test('server disconnection emits disconnected message', () async {
-     service.connect('thread-1', 'user-1');
+    service.connect('thread-1', 'user-1');
 
-     final futureMsg = service.messages.first;
+    final futureMsg = service.messages.first;
 
-     // Simulate server closing connection
-     await fakeChannel.incomingSink.close();
+    // Simulate server closing connection
+    await fakeChannel.incomingSink.close();
 
-     final msg = await futureMsg;
-     expect(msg.type, equals('disconnected'));
-     expect(service.isConnected, isFalse);
+    final msg = await futureMsg;
+    expect(msg.type, equals('disconnected'));
+    expect(service.isConnected, isFalse);
   });
 
   test('server error emits error message', () async {
-     service.connect('thread-1', 'user-1');
+    service.connect('thread-1', 'user-1');
 
-     final futureMsg = service.messages.first;
+    final futureMsg = service.messages.first;
 
-     // Simulate server error
-     fakeChannel.incomingSink.addError('Connection failed');
+    // Simulate server error
+    fakeChannel.incomingSink.addError('Connection failed');
 
-     final msg = await futureMsg;
-     expect(msg.type, equals('error'));
-     expect(msg.data['error'], contains('Connection failed'));
-     expect(service.isConnected, isFalse);
+    final msg = await futureMsg;
+    expect(msg.type, equals('error'));
+    expect(msg.data['error'], contains('Connection failed'));
+    expect(service.isConnected, isFalse);
   });
 }

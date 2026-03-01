@@ -8,10 +8,7 @@ class ZubiaLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: Image.asset(
-        'assets/icon/app_icon.png',
-        fit: BoxFit.cover,
-      ),
+      child: Image.asset('assets/icon/app_icon.png', fit: BoxFit.cover),
     );
   }
 }

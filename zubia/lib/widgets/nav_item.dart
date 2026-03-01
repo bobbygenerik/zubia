@@ -39,7 +39,9 @@ class ZubiaNavItem extends StatelessWidget {
                     Icon(
                       icon,
                       size: 24,
-                      color: active ? ZubiaColors.magenta : ZubiaColors.textMuted,
+                      color: active
+                          ? ZubiaColors.magenta
+                          : ZubiaColors.textMuted,
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -47,7 +49,9 @@ class ZubiaNavItem extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
-                        color: active ? ZubiaColors.magenta : ZubiaColors.textMuted,
+                        color: active
+                            ? ZubiaColors.magenta
+                            : ZubiaColors.textMuted,
                       ),
                     ),
                   ],

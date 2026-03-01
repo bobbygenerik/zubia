@@ -7,7 +7,7 @@ class ApiService {
   final http.Client _client;
 
   ApiService({required this.baseUrl, http.Client? client})
-      : _client = client ?? http.Client();
+    : _client = client ?? http.Client();
 
   Future<Map<String, String>> getLanguages() async {
     try {
@@ -19,13 +19,23 @@ class ApiService {
     } catch (_) {}
     // Fallback
     return {
-      'en': 'English', 'es': 'Spanish', 'fr': 'French',
-      'de': 'German', 'zh': 'Chinese', 'ja': 'Japanese',
-      'ar': 'Arabic', 'pt': 'Portuguese', 'ru': 'Russian', 'ko': 'Korean',
+      'en': 'English',
+      'es': 'Spanish',
+      'fr': 'French',
+      'de': 'German',
+      'zh': 'Chinese',
+      'ja': 'Japanese',
+      'ar': 'Arabic',
+      'pt': 'Portuguese',
+      'ru': 'Russian',
+      'ko': 'Korean',
     };
   }
 
-  Future<Map<String, dynamic>?> registerUser(String name, String language) async {
+  Future<Map<String, dynamic>?> registerUser(
+    String name,
+    String language,
+  ) async {
     try {
       final res = await _client.post(
         Uri.parse('$baseUrl/api/users/register'),

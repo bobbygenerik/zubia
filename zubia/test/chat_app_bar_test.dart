@@ -26,9 +26,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: ChatAppBar(state: state),
-        ),
+        home: Scaffold(body: ChatAppBar(state: state)),
       ),
     );
 

@@ -65,9 +65,13 @@ class _ChatScreenState extends State<ChatScreen> {
                 Expanded(
                   child: ListView.builder(
                     controller: _feedScroll,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     itemCount: state.feed.length,
-                    itemBuilder: (context, i) => _FeedItem(entry: state.feed[i], state: state),
+                    itemBuilder: (context, i) =>
+                        _FeedItem(entry: state.feed[i], state: state),
                   ),
                 ),
 
@@ -99,7 +103,16 @@ class _FeedItem extends StatelessWidget {
           children: [
             const Text('⚡', style: TextStyle(fontSize: 14)),
             const SizedBox(width: 6),
-            Flexible(child: Text(entry.systemText ?? '', style: TextStyle(color: ZubiaColors.textSecondary, fontSize: 12), textAlign: TextAlign.center)),
+            Flexible(
+              child: Text(
+                entry.systemText ?? '',
+                style: TextStyle(
+                  color: ZubiaColors.textSecondary,
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
           ],
         ),
       );
@@ -111,14 +124,23 @@ class _FeedItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
             CircleAvatar(
               radius: 16,
               backgroundColor: ZubiaColors.magenta.withValues(alpha: 0.15),
-              child: Text(initial, style: const TextStyle(color: ZubiaColors.magenta, fontWeight: FontWeight.w700, fontSize: 14)),
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  color: ZubiaColors.magenta,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
             ),
             const SizedBox(width: 8),
           ],
@@ -126,7 +148,9 @@ class _FeedItem extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isMe ? ZubiaColors.magenta.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
+                color: isMe
+                    ? ZubiaColors.magenta.withValues(alpha: 0.15)
+                    : Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -134,34 +158,64 @@ class _FeedItem extends StatelessWidget {
                   bottomRight: Radius.circular(isMe ? 4 : 16),
                 ),
                 border: Border.all(
-                  color: isMe ? ZubiaColors.magenta.withValues(alpha: 0.3) : ZubiaColors.glassBorder,
+                  color: isMe
+                      ? ZubiaColors.magenta.withValues(alpha: 0.3)
+                      : ZubiaColors.glassBorder,
                 ),
               ),
               child: Column(
-                crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                crossAxisAlignment: isMe
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
                 children: [
                   if (!isMe) ...[
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(entry.fromUser ?? '', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: ZubiaColors.textSecondary)),
+                        Text(
+                          entry.fromUser ?? '',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: ZubiaColors.textSecondary,
+                          ),
+                        ),
                         const SizedBox(width: 6),
                         if (entry.fromLanguage != null)
-                          Text(state.getFlagEmoji(entry.fromLanguage!), style: const TextStyle(fontSize: 12)),
+                          Text(
+                            state.getFlagEmoji(entry.fromLanguage!),
+                            style: const TextStyle(fontSize: 12),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 6),
                   ],
                   if (entry.originalText != null && !isMe) ...[
-                    Text('"${entry.originalText}"', style: TextStyle(color: ZubiaColors.textSecondary, fontSize: 13, fontStyle: FontStyle.italic)),
+                    Text(
+                      '"${entry.originalText}"',
+                      style: TextStyle(
+                        color: ZubiaColors.textSecondary,
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                   ],
                   if (entry.translatedText != null && !isMe)
-                    Text(entry.translatedText!, style: const TextStyle(fontSize: 15))
+                    Text(
+                      entry.translatedText!,
+                      style: const TextStyle(fontSize: 15),
+                    )
                   else if (isMe && entry.originalText != null)
-                    Text(entry.originalText!, style: const TextStyle(fontSize: 15))
+                    Text(
+                      entry.originalText!,
+                      style: const TextStyle(fontSize: 15),
+                    )
                   else if (isMe && entry.translatedText != null)
-                    Text(entry.translatedText!, style: const TextStyle(fontSize: 15)),
+                    Text(
+                      entry.translatedText!,
+                      style: const TextStyle(fontSize: 15),
+                    ),
                 ],
               ),
             ),
@@ -171,7 +225,14 @@ class _FeedItem extends StatelessWidget {
             CircleAvatar(
               radius: 16,
               backgroundColor: ZubiaColors.success.withValues(alpha: 0.15),
-              child: Text(initial, style: const TextStyle(color: ZubiaColors.success, fontWeight: FontWeight.w700, fontSize: 14)),
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  color: ZubiaColors.success,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
             ),
           ],
         ],
@@ -214,7 +275,11 @@ class _ControlsBar extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.volume_mute, size: 20, color: ZubiaColors.textMuted),
+                icon: const Icon(
+                  Icons.volume_mute,
+                  size: 20,
+                  color: ZubiaColors.textMuted,
+                ),
                 tooltip: 'Mute',
                 onPressed: () => state.setVolume(0.0),
               ),
@@ -240,7 +305,11 @@ class _ControlsBar extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.volume_up, size: 20, color: ZubiaColors.textMuted),
+                icon: const Icon(
+                  Icons.volume_up,
+                  size: 20,
+                  color: ZubiaColors.textMuted,
+                ),
                 tooltip: 'Max volume',
                 onPressed: () => state.setVolume(1.0),
               ),
@@ -269,7 +338,9 @@ class _ModeToggle extends StatelessWidget {
       child: Stack(
         children: [
           AnimatedAlign(
-            alignment: state.mode == 'realtime' ? Alignment.centerLeft : Alignment.centerRight,
+            alignment: state.mode == 'realtime'
+                ? Alignment.centerLeft
+                : Alignment.centerRight,
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
             child: FractionallySizedBox(
@@ -277,10 +348,17 @@ class _ModeToggle extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: state.mode == 'walkie'
-                      ? const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFEA580C)])
+                      ? const LinearGradient(
+                          colors: [Color(0xFFF59E0B), Color(0xFFEA580C)],
+                        )
                       : ZubiaColors.magentaGradient,
                   borderRadius: BorderRadius.circular(17),
-                  boxShadow: [BoxShadow(color: ZubiaColors.magenta.withValues(alpha: 0.3), blurRadius: 8)],
+                  boxShadow: [
+                    BoxShadow(
+                      color: ZubiaColors.magenta.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -300,10 +378,16 @@ class _ModeToggle extends StatelessWidget {
                         state.setMode('realtime');
                       },
                       child: Center(
-                        child: Text('Real-time', style: TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600,
-                          color: state.mode == 'realtime' ? Colors.white : ZubiaColors.textMuted,
-                        )),
+                        child: Text(
+                          'Real-time',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: state.mode == 'realtime'
+                                ? Colors.white
+                                : ZubiaColors.textMuted,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -322,10 +406,16 @@ class _ModeToggle extends StatelessWidget {
                         state.setMode('walkie');
                       },
                       child: Center(
-                        child: Text('Walkie-talkie', style: TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600,
-                          color: state.mode == 'walkie' ? Colors.white : ZubiaColors.textMuted,
-                        )),
+                        child: Text(
+                          'Walkie-talkie',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: state.mode == 'walkie'
+                                ? Colors.white
+                                : ZubiaColors.textMuted,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -365,22 +455,28 @@ class _MicButton extends StatelessWidget {
       child: Tooltip(
         message: semanticHint,
         child: GestureDetector(
-          onTap: isWalkie ? null : () {
-            HapticFeedback.selectionClick();
-            if (recording) {
-              state.stopRecording();
-            } else {
-              state.startRealtimeRecording();
-            }
-          },
-          onLongPressStart: isWalkie ? (_) {
-            HapticFeedback.mediumImpact();
-            state.startWalkieRecording();
-          } : null,
-          onLongPressEnd: isWalkie ? (_) {
-            HapticFeedback.lightImpact();
-            state.stopWalkieAndSend();
-          } : null,
+          onTap: isWalkie
+              ? null
+              : () {
+                  HapticFeedback.selectionClick();
+                  if (recording) {
+                    state.stopRecording();
+                  } else {
+                    state.startRealtimeRecording();
+                  }
+                },
+          onLongPressStart: isWalkie
+              ? (_) {
+                  HapticFeedback.mediumImpact();
+                  state.startWalkieRecording();
+                }
+              : null,
+          onLongPressEnd: isWalkie
+              ? (_) {
+                  HapticFeedback.lightImpact();
+                  state.stopWalkieAndSend();
+                }
+              : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: 72,
@@ -389,11 +485,15 @@ class _MicButton extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: recording
                   ? null
-                  : LinearGradient(colors: [color, color.withValues(alpha: 0.8)]),
+                  : LinearGradient(
+                      colors: [color, color.withValues(alpha: 0.8)],
+                    ),
               color: recording ? ZubiaColors.danger : null,
               boxShadow: [
                 BoxShadow(
-                  color: (recording ? ZubiaColors.danger : color).withValues(alpha: 0.4),
+                  color: (recording ? ZubiaColors.danger : color).withValues(
+                    alpha: 0.4,
+                  ),
                   blurRadius: recording ? 24 : 16,
                 ),
               ],
