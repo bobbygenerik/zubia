@@ -275,7 +275,7 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
         if not text.strip():
             return  # No speech detected
 
-        logger.info(f"STT [{detected_lang}]: '{text}' (from {sender.name})")
+        logger.info(f"STT [{detected_lang}] for {sender.name}")
 
         # Notify the sender about the transcription
         try:
@@ -309,7 +309,7 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
                 else:
                     translated = text
 
-                logger.info(f"Translate [{detected_lang}->{target_lang}]: '{translated}'")
+                logger.info(f"Translate [{detected_lang}->{target_lang}]")
 
                 # TTS
                 tts_audio = await asyncio.get_event_loop().run_in_executor(
