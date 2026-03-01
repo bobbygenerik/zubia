@@ -137,16 +137,3 @@ def get_supported_languages() -> dict[str, str]:
     return SUPPORTED_LANGUAGES.copy()
 
 
-def preload_common_pairs():
-    """Pre-download common translation pairs to avoid first-use delay."""
-    common_pairs = [
-        ("en", "es"), ("es", "en"),
-        ("en", "fr"), ("fr", "en"),
-        ("en", "de"), ("de", "en"),
-        ("en", "zh"), ("zh", "en"),
-    ]
-    for from_lang, to_lang in common_pairs:
-        try:
-            _ensure_package_installed(from_lang, to_lang)
-        except Exception as e:
-            logger.warning(f"Failed to preload {from_lang}->{to_lang}: {e}")
