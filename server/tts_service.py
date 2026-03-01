@@ -177,13 +177,3 @@ def _generate_silence(duration_seconds: float, sample_rate: int = 22050) -> byte
     return buf.getvalue()
 
 
-def preload_voices(languages: list[str] | None = None):
-    """Pre-download voice models for specified languages."""
-    if languages is None:
-        languages = ["en", "es"]  # Default to just English and Spanish
-
-    for lang in languages:
-        try:
-            _download_voice(lang)
-        except Exception as e:
-            logger.warning(f"Failed to preload voice for '{lang}': {e}")
