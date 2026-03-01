@@ -15,7 +15,9 @@ class AudioRecorderService {
 
   /// Start recording in real-time mode (4-second chunks).
   /// Calls [onChunk] with WAV bytes every 4 seconds.
-  Future<bool> startRealtime(Future<void> Function(Uint8List wavBytes) onChunk) async {
+  Future<bool> startRealtime(
+    Future<void> Function(Uint8List wavBytes) onChunk,
+  ) async {
     if (!await _recorder.hasPermission()) return false;
 
     _isRecording = true;
@@ -64,7 +66,8 @@ class AudioRecorderService {
 
   Future<void> _startRecording() async {
     final dir = await getTemporaryDirectory();
-    _currentPath = '${dir.path}/zubia_rec_${DateTime.now().millisecondsSinceEpoch}.wav';
+    _currentPath =
+        '${dir.path}/zubia_rec_${DateTime.now().millisecondsSinceEpoch}.wav';
 
     await _recorder.start(
       const RecordConfig(

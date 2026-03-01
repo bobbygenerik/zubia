@@ -35,14 +35,19 @@ class RoomUser {
   final String language;
   final bool isMuted;
 
-  RoomUser({required this.id, required this.name, required this.language, this.isMuted = false});
+  RoomUser({
+    required this.id,
+    required this.name,
+    required this.language,
+    this.isMuted = false,
+  });
 
   factory RoomUser.fromJson(Map<String, dynamic> json) => RoomUser(
-        id: json['id'] ?? '',
-        name: json['name'] ?? '',
-        language: json['language'] ?? 'en',
-        isMuted: json['isMuted'] ?? false,
-      );
+    id: json['id'] ?? '',
+    name: json['name'] ?? '',
+    language: json['language'] ?? 'en',
+    isMuted: json['isMuted'] ?? false,
+  );
 }
 
 /// Central app state.
@@ -69,7 +74,8 @@ class AppState extends ChangeNotifier {
   // State
   Map<String, String> languages = {};
   List<Map<String, dynamic>> threads = [];
-  String connectionStatus = 'disconnected'; // disconnected, connecting, connected, recording, processing
+  String connectionStatus =
+      'disconnected'; // disconnected, connecting, connected, recording, processing
   bool isRecording = false;
   String mode = 'realtime'; // realtime or walkie
   double volume = 1.0;
@@ -227,12 +233,16 @@ class AppState extends ChangeNotifier {
         _parseUsers(msg.data['users']);
         connectionStatus = 'connected';
         feed.clear();
-        _addSystemFeed('You joined the chat. ${mode == 'walkie' ? 'Hold the mic to talk.' : 'Tap the mic to start streaming.'}');
+        _addSystemFeed(
+          'You joined the chat. ${mode == 'walkie' ? 'Hold the mic to talk.' : 'Tap the mic to start streaming.'}',
+        );
         break;
 
       case 'user_joined':
         _parseUsers(msg.data['users']);
-        _addSystemFeed('${msg.data['userName']} joined (${languages[msg.data['language']] ?? msg.data['language']})');
+        _addSystemFeed(
+          '${msg.data['userName']} joined (${languages[msg.data['language']] ?? msg.data['language']})',
+        );
         break;
 
       case 'user_left':
@@ -250,23 +260,27 @@ class AppState extends ChangeNotifier {
         break;
 
       case 'transcription':
-        feed.add(FeedEntry(
-          type: 'transcription',
-          fromUser: 'You',
-          originalText: msg.data['text'] as String?,
-          fromLanguage: msg.data['language'] as String?,
-        ));
+        feed.add(
+          FeedEntry(
+            type: 'transcription',
+            fromUser: 'You',
+            originalText: msg.data['text'] as String?,
+            fromLanguage: msg.data['language'] as String?,
+          ),
+        );
         break;
 
       case 'translated_audio_meta':
-        feed.add(FeedEntry(
-          type: 'translation',
-          fromUser: msg.data['fromUser'] as String?,
-          originalText: msg.data['originalText'] as String?,
-          translatedText: msg.data['translatedText'] as String?,
-          fromLanguage: msg.data['fromLanguage'] as String?,
-          toLanguage: msg.data['toLanguage'] as String?,
-        ));
+        feed.add(
+          FeedEntry(
+            type: 'translation',
+            fromUser: msg.data['fromUser'] as String?,
+            originalText: msg.data['originalText'] as String?,
+            translatedText: msg.data['translatedText'] as String?,
+            fromLanguage: msg.data['fromLanguage'] as String?,
+            toLanguage: msg.data['toLanguage'] as String?,
+          ),
+        );
         break;
 
       case 'audio_data':
@@ -296,8 +310,16 @@ class AppState extends ChangeNotifier {
 
   String getFlagEmoji(String langCode) {
     const flags = {
-      'en': '🇺🇸', 'es': '🇪🇸', 'fr': '🇫🇷', 'de': '🇩🇪', 'zh': '🇨🇳',
-      'ja': '🇯🇵', 'ar': '🇸🇦', 'pt': '🇵🇹', 'ru': '🇷🇺', 'ko': '🇰🇷',
+      'en': '🇺🇸',
+      'es': '🇪🇸',
+      'fr': '🇫🇷',
+      'de': '🇩🇪',
+      'zh': '🇨🇳',
+      'ja': '🇯🇵',
+      'ar': '🇸🇦',
+      'pt': '🇵🇹',
+      'ru': '🇷🇺',
+      'ko': '🇰🇷',
     };
     return flags[langCode] ?? '🌍';
   }

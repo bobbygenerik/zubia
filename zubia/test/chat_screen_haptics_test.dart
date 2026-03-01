@@ -44,40 +44,45 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   // Mock permission handler channel
-  const MethodChannel permissionChannel = MethodChannel('flutter.baseflow.com/permissions/methods');
+  const MethodChannel permissionChannel = MethodChannel(
+    'flutter.baseflow.com/permissions/methods',
+  );
 
   setUp(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      permissionChannel,
-      (MethodCall methodCall) async {
-        if (methodCall.method == 'checkPermissionStatus') {
-          return 1; // Granted
-        } else if (methodCall.method == 'requestPermissions') {
-          return {1: 1}; // Microphone: Granted
-        }
-        return null;
-      },
-    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(permissionChannel, (
+          MethodCall methodCall,
+        ) async {
+          if (methodCall.method == 'checkPermissionStatus') {
+            return 1; // Granted
+          } else if (methodCall.method == 'requestPermissions') {
+            return {1: 1}; // Microphone: Granted
+          }
+          return null;
+        });
   });
 
   tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(permissionChannel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(permissionChannel, null);
   });
 
-  testWidgets('ChatScreen controls trigger HapticFeedback', (WidgetTester tester) async {
+  testWidgets('ChatScreen controls trigger HapticFeedback', (
+    WidgetTester tester,
+  ) async {
     final state = MockAppState();
     final List<String> feedbackCalls = [];
 
     // Mock SystemChannels.platform to intercept HapticFeedback
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (MethodCall methodCall) async {
-        if (methodCall.method == 'HapticFeedback.vibrate') {
-          feedbackCalls.add(methodCall.arguments.toString());
-        }
-        return null;
-      },
-    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (
+          MethodCall methodCall,
+        ) async {
+          if (methodCall.method == 'HapticFeedback.vibrate') {
+            feedbackCalls.add(methodCall.arguments.toString());
+          }
+          return null;
+        });
 
     await tester.pumpWidget(
       MaterialApp(
@@ -102,13 +107,17 @@ void main() {
     // Mode is now Walkie-talkie.
     expect(state.mode, 'walkie');
 
-    final micButton = find.byType(GestureDetector).last; // The mic button is likely the last GestureDetector or found by icon
+    final micButton = find
+        .byType(GestureDetector)
+        .last; // The mic button is likely the last GestureDetector or found by icon
     // Better finder:
     final micIcon = find.byIcon(Icons.mic);
 
     // Long press start
     final gesture = await tester.startGesture(tester.getCenter(micIcon));
-    await tester.pump(const Duration(milliseconds: 500)); // Ensure long press is recognized
+    await tester.pump(
+      const Duration(milliseconds: 500),
+    ); // Ensure long press is recognized
 
     // Long press end
     await gesture.up();
@@ -123,7 +132,8 @@ void main() {
     await tester.pump();
 
     // Clean up mock
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, null);
 
     // Verify calls
     // Note: Since we haven't implemented the calls yet, this test is expected to fail or have empty list.
@@ -136,10 +146,16 @@ void main() {
 
     // Check calls
     expect(feedbackCalls.length, 5);
-    expect(feedbackCalls[0], 'HapticFeedbackType.selectionClick'); // Switch to Walkie
-    expect(feedbackCalls[1], 'HapticFeedbackType.mediumImpact');   // Press Mic
-    expect(feedbackCalls[2], 'HapticFeedbackType.lightImpact');    // Release Mic
-    expect(feedbackCalls[3], 'HapticFeedbackType.selectionClick'); // Switch to Realtime
+    expect(
+      feedbackCalls[0],
+      'HapticFeedbackType.selectionClick',
+    ); // Switch to Walkie
+    expect(feedbackCalls[1], 'HapticFeedbackType.mediumImpact'); // Press Mic
+    expect(feedbackCalls[2], 'HapticFeedbackType.lightImpact'); // Release Mic
+    expect(
+      feedbackCalls[3],
+      'HapticFeedbackType.selectionClick',
+    ); // Switch to Realtime
     expect(feedbackCalls[4], 'HapticFeedbackType.selectionClick'); // Tap Mic
   });
 }

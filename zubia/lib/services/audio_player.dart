@@ -35,7 +35,9 @@ class AudioPlayerService {
 
     try {
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/zubia_play_${DateTime.now().millisecondsSinceEpoch}.wav');
+      final file = File(
+        '${dir.path}/zubia_play_${DateTime.now().millisecondsSinceEpoch}.wav',
+      );
       await file.writeAsBytes(item.bytes);
 
       await _player.setVolume(_volume);

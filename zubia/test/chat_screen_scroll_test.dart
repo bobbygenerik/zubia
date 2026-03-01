@@ -30,75 +30,93 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   // Mock permission handler channel
-  const MethodChannel channel = MethodChannel('flutter.baseflow.com/permissions/methods');
+  const MethodChannel channel = MethodChannel(
+    'flutter.baseflow.com/permissions/methods',
+  );
 
   setUp(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      channel,
-      (MethodCall methodCall) async {
-        if (methodCall.method == 'checkPermissionStatus') {
-          return 1; // Granted
-        } else if (methodCall.method == 'requestPermissions') {
-          return {1: 1}; // Microphone: Granted
-        }
-        return null;
-      },
-    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+          if (methodCall.method == 'checkPermissionStatus') {
+            return 1; // Granted
+          } else if (methodCall.method == 'requestPermissions') {
+            return {1: 1}; // Microphone: Granted
+          }
+          return null;
+        });
   });
 
   tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
   });
 
-  testWidgets('ChatScreen scrolls to bottom on every rebuild (Reproduce Issue)', (WidgetTester tester) async {
-    final state = MockAppState();
+  testWidgets(
+    'ChatScreen scrolls to bottom on every rebuild (Reproduce Issue)',
+    (WidgetTester tester) async {
+      final state = MockAppState();
 
-    // Add many messages to ensure scrolling is possible
-    for (int i = 0; i < 50; i++) {
-      state.feed.add(FeedEntry(
-        type: 'transcription',
-        fromUser: i % 2 == 0 ? 'Me' : 'Other',
-        originalText: 'Message $i which is long enough to take some space',
-      ));
-    }
+      // Add many messages to ensure scrolling is possible
+      for (int i = 0; i < 50; i++) {
+        state.feed.add(
+          FeedEntry(
+            type: 'transcription',
+            fromUser: i % 2 == 0 ? 'Me' : 'Other',
+            originalText: 'Message $i which is long enough to take some space',
+          ),
+        );
+      }
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ChangeNotifierProvider<AppState>.value(
-          value: state,
-          child: const ChatScreen(),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<AppState>.value(
+            value: state,
+            child: const ChatScreen(),
+          ),
         ),
-      ),
-    );
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    // Find the Scrollable
-    final scrollableFinder = find.byType(Scrollable);
-    expect(scrollableFinder, findsOneWidget);
+      // Find the Scrollable
+      final scrollableFinder = find.byType(Scrollable);
+      expect(scrollableFinder, findsOneWidget);
 
-    final ScrollableState scrollable = tester.state(scrollableFinder);
-    final ScrollPosition position = scrollable.position;
+      final ScrollableState scrollable = tester.state(scrollableFinder);
+      final ScrollPosition position = scrollable.position;
 
-    // Verify we are at the bottom initially
-    expect(position.pixels, equals(position.maxScrollExtent), reason: "Should start at bottom");
+      // Verify we are at the bottom initially
+      expect(
+        position.pixels,
+        equals(position.maxScrollExtent),
+        reason: "Should start at bottom",
+      );
 
-    // Scroll up by 200 pixels
-    final double targetScroll = position.maxScrollExtent - 200;
-    position.jumpTo(targetScroll);
-    await tester.pump();
+      // Scroll up by 200 pixels
+      final double targetScroll = position.maxScrollExtent - 200;
+      position.jumpTo(targetScroll);
+      await tester.pump();
 
-    expect(position.pixels, equals(targetScroll), reason: "Should be scrolled up");
+      expect(
+        position.pixels,
+        equals(targetScroll),
+        reason: "Should be scrolled up",
+      );
 
-    // Trigger a rebuild by changing volume (unrelated to feed)
-    state.setVolume(0.8);
-    await tester.pump(); // Allow Consumer to rebuild
+      // Trigger a rebuild by changing volume (unrelated to feed)
+      state.setVolume(0.8);
+      await tester.pump(); // Allow Consumer to rebuild
 
-    // Wait for the post frame callback animation to start/complete
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pumpAndSettle();
+      // Wait for the post frame callback animation to start/complete
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
 
-    // FIX: It should stay at the same position (targetScroll)
-    expect(position.pixels, equals(targetScroll), reason: "Should NOT have scrolled back to bottom");
-  });
+      // FIX: It should stay at the same position (targetScroll)
+      expect(
+        position.pixels,
+        equals(targetScroll),
+        reason: "Should NOT have scrolled back to bottom",
+      );
+    },
+  );
 }

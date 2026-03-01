@@ -5,7 +5,9 @@ import 'package:zubia/widgets/nav_item.dart';
 import 'package:zubia/theme.dart';
 
 void main() {
-  testWidgets('ZubiaNavItem renders correctly and is accessible', (WidgetTester tester) async {
+  testWidgets('ZubiaNavItem renders correctly and is accessible', (
+    WidgetTester tester,
+  ) async {
     bool tapped = false;
 
     await tester.pumpWidget(
@@ -34,10 +36,26 @@ void main() {
     final data = semanticsNode.getSemanticsData();
 
     expect(data.label, 'Home');
-    expect(data.hasFlag(SemanticsFlag.isButton), true, reason: 'Should be a button');
-    expect(data.hasFlag(SemanticsFlag.isSelected), true, reason: 'Should be selected');
-    expect(data.hasAction(SemanticsAction.tap), true, reason: 'Should be tappable');
-    expect(data.hasFlag(SemanticsFlag.isFocusable), true, reason: 'Should be focusable');
+    expect(
+      data.hasFlag(SemanticsFlag.isButton),
+      true,
+      reason: 'Should be a button',
+    );
+    expect(
+      data.hasFlag(SemanticsFlag.isSelected),
+      true,
+      reason: 'Should be selected',
+    );
+    expect(
+      data.hasAction(SemanticsAction.tap),
+      true,
+      reason: 'Should be tappable',
+    );
+    expect(
+      data.hasFlag(SemanticsFlag.isFocusable),
+      true,
+      reason: 'Should be focusable',
+    );
 
     // Verify interaction
     await tester.tap(find.bySemanticsLabel('Home'));
@@ -45,7 +63,9 @@ void main() {
     expect(tapped, true);
   });
 
-  testWidgets('ZubiaNavItem reflects inactive state', (WidgetTester tester) async {
+  testWidgets('ZubiaNavItem reflects inactive state', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -62,12 +82,18 @@ void main() {
     );
 
     // Verify Semantics
-    final semanticsNode = tester.getSemantics(find.bySemanticsLabel('Settings'));
+    final semanticsNode = tester.getSemantics(
+      find.bySemanticsLabel('Settings'),
+    );
     final data = semanticsNode.getSemanticsData();
 
     expect(data.label, 'Settings');
     expect(data.hasFlag(SemanticsFlag.isButton), true);
-    expect(data.hasFlag(SemanticsFlag.isSelected), false, reason: 'Should NOT be selected');
+    expect(
+      data.hasFlag(SemanticsFlag.isSelected),
+      false,
+      reason: 'Should NOT be selected',
+    );
     expect(data.hasAction(SemanticsAction.tap), true);
 
     // Check color (Inactive should be muted)

@@ -26,11 +26,11 @@ class _NewChatScreenState extends State<NewChatScreen> {
   Future<void> _loadUsers() async {
     final state = context.read<AppState>();
     final users = await state.api.getUsers();
-    
+
     // Filter out ourself
     _users = users.where((u) => u['id'] != state.userId).toList();
     _filteredUsers = _users;
-    
+
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -38,9 +38,13 @@ class _NewChatScreenState extends State<NewChatScreen> {
     if (query.isEmpty) {
       _filteredUsers = _users;
     } else {
-      _filteredUsers = _users.where((u) => 
-        (u['name'] as String).toLowerCase().contains(query.toLowerCase())
-      ).toList();
+      _filteredUsers = _users
+          .where(
+            (u) => (u['name'] as String).toLowerCase().contains(
+              query.toLowerCase(),
+            ),
+          )
+          .toList();
     }
     setState(() {});
   }
@@ -48,14 +52,16 @@ class _NewChatScreenState extends State<NewChatScreen> {
   Future<void> _startThread(String otherUserId, String otherUserName) async {
     final state = context.read<AppState>();
     setState(() => _isLoading = true);
-    
+
     final threadId = await state.createThreadWithUser(otherUserId);
     if (threadId != null && mounted) {
       state.joinThread(threadId, otherUserName);
       context.go('/chat');
     } else if (mounted) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to create chat')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to create chat')));
     }
   }
 
@@ -78,10 +84,17 @@ class _NewChatScreenState extends State<NewChatScreen> {
               onChanged: _filter,
               decoration: InputDecoration(
                 hintText: 'Search users...',
-                prefixIcon: const Icon(Icons.search, color: ZubiaColors.textMuted),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: ZubiaColors.textMuted,
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, color: ZubiaColors.textMuted, size: 20),
+                        icon: const Icon(
+                          Icons.clear,
+                          color: ZubiaColors.textMuted,
+                          size: 20,
+                        ),
                         tooltip: 'Clear search',
                         onPressed: () {
                           _searchController.clear();
@@ -99,16 +112,30 @@ class _NewChatScreenState extends State<NewChatScreen> {
             ),
           ),
           Expanded(
-            child: _isLoading 
-              ? const Center(child: CircularProgressIndicator(color: ZubiaColors.magenta))
-              : _filteredUsers.isEmpty
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: ZubiaColors.magenta,
+                    ),
+                  )
+                : _filteredUsers.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.search_off, size: 48, color: ZubiaColors.textMuted.withValues(alpha: 0.5)),
+                        Icon(
+                          Icons.search_off,
+                          size: 48,
+                          color: ZubiaColors.textMuted.withValues(alpha: 0.5),
+                        ),
                         const SizedBox(height: 16),
-                        const Text('No users found', style: TextStyle(color: ZubiaColors.textMuted, fontSize: 16)),
+                        const Text(
+                          'No users found',
+                          style: TextStyle(
+                            color: ZubiaColors.textMuted,
+                            fontSize: 16,
+                          ),
+                        ),
                       ],
                     ),
                   )
@@ -120,18 +147,32 @@ class _NewChatScreenState extends State<NewChatScreen> {
                       final lang = u['language'] ?? 'en';
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: ZubiaColors.magenta.withValues(alpha: 0.1),
-                          child: Text(state.getFlagEmoji(lang), style: const TextStyle(fontSize: 20)),
+                          backgroundColor: ZubiaColors.magenta.withValues(
+                            alpha: 0.1,
+                          ),
+                          child: Text(
+                            state.getFlagEmoji(lang),
+                            style: const TextStyle(fontSize: 20),
+                          ),
                         ),
-                        title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('Speaks ${state.languages[lang] ?? lang}', style: TextStyle(color: ZubiaColors.textSecondary, fontSize: 13)),
+                        title: Text(
+                          name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          'Speaks ${state.languages[lang] ?? lang}',
+                          style: TextStyle(
+                            color: ZubiaColors.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
                         onTap: () => _startThread(u['id'], name),
                       );
                     },
                   ),
-          )
+          ),
         ],
-      )
+      ),
     );
   }
 }

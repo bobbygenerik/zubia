@@ -16,11 +16,7 @@ class OnboardingScreen extends StatelessWidget {
             children: [
               const Spacer(flex: 2),
               // Logo
-              const SizedBox(
-                width: 200,
-                height: 200,
-                child: ZubiaLogo(),
-              ),
+              const SizedBox(width: 200, height: 200, child: ZubiaLogo()),
               const SizedBox(height: 16),
               const Text(
                 'Zubia',
@@ -36,9 +32,16 @@ class OnboardingScreen extends StatelessWidget {
               RichText(
                 textAlign: TextAlign.center,
                 text: const TextSpan(
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, height: 1.3),
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                  ),
                   children: [
-                    TextSpan(text: 'Break ', style: TextStyle(color: Colors.white)),
+                    TextSpan(
+                      text: 'Break ',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     TextSpan(
                       text: 'Language',
                       style: TextStyle(
@@ -46,7 +49,10 @@ class OnboardingScreen extends StatelessWidget {
                         color: ZubiaColors.magenta,
                       ),
                     ),
-                    TextSpan(text: '\nBarriers', style: TextStyle(color: Colors.white)),
+                    TextSpan(
+                      text: '\nBarriers',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ],
                 ),
               ),
@@ -84,7 +90,9 @@ class OnboardingScreen extends StatelessWidget {
                     ),
                     child: MaterialButton(
                       onPressed: () => context.go('/home'),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

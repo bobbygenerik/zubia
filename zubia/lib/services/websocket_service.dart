@@ -24,7 +24,7 @@ class WebSocketService {
   bool _connected = false;
 
   WebSocketService({required this.baseUrl, WebSocketConnect? connect})
-      : _connect = connect ?? ((uri) => WebSocketChannel.connect(uri));
+    : _connect = connect ?? ((uri) => WebSocketChannel.connect(uri));
 
   Stream<ServerMessage> get messages => _messageController.stream;
   bool get isConnected => _connected;
@@ -34,9 +34,7 @@ class WebSocketService {
     _channel = _connect(Uri.parse('$wsUrl/ws/thread/$threadId'));
 
     // Send join message
-    _channel!.sink.add(jsonEncode({
-      'userId': userId,
-    }));
+    _channel!.sink.add(jsonEncode({'userId': userId}));
 
     _channel!.stream.listen(
       (data) {
@@ -52,11 +50,13 @@ class WebSocketService {
         } else if (data is List<int>) {
           // Binary audio data
           final bytes = Uint8List.fromList(data);
-          _messageController.add(ServerMessage(
-            type: 'audio_data',
-            data: _pendingAudioMeta ?? {},
-            audioBytes: bytes,
-          ));
+          _messageController.add(
+            ServerMessage(
+              type: 'audio_data',
+              data: _pendingAudioMeta ?? {},
+              audioBytes: bytes,
+            ),
+          );
           _pendingAudioMeta = null;
         }
       },
@@ -66,7 +66,9 @@ class WebSocketService {
       },
       onError: (err) {
         _connected = false;
-        _messageController.add(ServerMessage(type: 'error', data: {'error': err.toString()}));
+        _messageController.add(
+          ServerMessage(type: 'error', data: {'error': err.toString()}),
+        );
       },
     );
 

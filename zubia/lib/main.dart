@@ -28,11 +28,20 @@ void main() {
 final _router = GoRouter(
   initialLocation: '/onboarding',
   routes: [
-    GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
+    GoRoute(
+      path: '/onboarding',
+      builder: (context, state) => const OnboardingScreen(),
+    ),
     GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
-    GoRoute(path: '/new_chat', builder: (context, state) => const NewChatScreen()),
+    GoRoute(
+      path: '/new_chat',
+      builder: (context, state) => const NewChatScreen(),
+    ),
     GoRoute(path: '/chat', builder: (context, state) => const ChatScreen()),
-    GoRoute(path: '/history', builder: (context, state) => const HistoryScreen()),
+    GoRoute(
+      path: '/history',
+      builder: (context, state) => const HistoryScreen(),
+    ),
   ],
 );
 
