@@ -15,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
+  bool _isSaving = false;
   final _nameController = TextEditingController();
 
   @override
@@ -43,13 +44,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
     final state = context.read<AppState>();
-    setState(() => _isLoading = true);
+    setState(() => _isSaving = true);
     await state.registerAndSaveIdentity(
       name,
       state.userLanguage.isNotEmpty ? state.userLanguage : 'en',
     );
     await state.loadThreads();
-    if (mounted) setState(() => _isLoading = false);
+    if (mounted) setState(() => _isSaving = false);
   }
 
   @override
@@ -98,6 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
           TextField(
             controller: _nameController,
             onChanged: (_) => setState(() {}),
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: 'Name',
               hintText: 'Your name',
@@ -127,10 +130,19 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const Spacer(),
           ElevatedButton(
-            onPressed: _nameController.text.trim().isNotEmpty
+            onPressed: (_nameController.text.trim().isNotEmpty && !_isSaving)
                 ? _saveIdentity
                 : null,
-            child: const Text('Continue'),
+            child: _isSaving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Continue'),
           ),
           const SizedBox(height: 32),
         ],
@@ -175,12 +187,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 28),
                 if (state.threads.isEmpty)
-                  const Expanded(
+                  Expanded(
                     child: Center(
-                      child: Text(
-                        'No messages yet.\nStart a new chat below!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: ZubiaColors.textMuted),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            size: 48,
+                            color: ZubiaColors.textMuted.withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No messages yet.\nStart a new chat below!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: ZubiaColors.textMuted,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   )
