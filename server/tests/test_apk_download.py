@@ -13,7 +13,7 @@ mock_modules = [
     "stt_service",
     "translate_service",
     "tts_service",
-    "numpy"
+
 ]
 
 for module_name in mock_modules:
