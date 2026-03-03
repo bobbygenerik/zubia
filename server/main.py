@@ -74,6 +74,20 @@ class User:
     language: str  # ISO code: 'en', 'es', 'fr', etc.
     websocket: WebSocket
     is_muted: bool = False
+    _dict: dict = field(init=False, default=None)
+
+    def get_dict(self) -> dict:
+        if self._dict is None:
+            self._dict = {
+                "id": self.id,
+                "name": self.name,
+                "language": self.language,
+                "isMuted": self.is_muted,
+            }
+        return self._dict
+
+    def clear_cache(self):
+        self._dict = None
 
 
 @dataclass
@@ -225,6 +239,7 @@ async def handle_control_message(room: Room, user: User, data: dict):
 
     if msg_type == "mute":
         user.is_muted = True
+        user.clear_cache()
         await broadcast_system(room, {
             "type": "user_muted",
             "userId": user.id,
@@ -233,6 +248,7 @@ async def handle_control_message(room: Room, user: User, data: dict):
 
     elif msg_type == "unmute":
         user.is_muted = False
+        user.clear_cache()
         await broadcast_system(room, {
             "type": "user_unmuted",
             "userId": user.id,
@@ -242,6 +258,7 @@ async def handle_control_message(room: Room, user: User, data: dict):
     elif msg_type == "change_language":
         new_lang = data.get("language", user.language)
         user.language = new_lang
+        user.clear_cache()
         await broadcast_system(room, {
             "type": "user_language_changed",
             "userId": user.id,
@@ -357,12 +374,7 @@ async def process_audio(room: Room, sender: User, audio_bytes: bytes):
 def get_user_list(room: Room) -> list[dict]:
     """Get list of users in a room for broadcasting."""
     return [
-        {
-            "id": u.id,
-            "name": u.name,
-            "language": u.language,
-            "isMuted": u.is_muted,
-        }
+        u.get_dict()
         for u in room.users.values()
     ]
 
