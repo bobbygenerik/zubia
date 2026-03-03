@@ -7,7 +7,6 @@ import io
 import wave
 import logging
 import subprocess
-import json
 import functools
 from pathlib import Path
 from typing import Optional
