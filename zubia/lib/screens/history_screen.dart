@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../theme.dart';
 import '../widgets/nav_item.dart';
@@ -37,6 +38,7 @@ class HistoryScreen extends StatelessWidget {
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.search, size: 22),
+                    tooltip: 'Search history',
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Search coming soon!')),
@@ -229,20 +231,37 @@ class _HistoryCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: ZubiaColors.magenta.withValues(alpha: 0.1),
-                    border: Border.all(
-                      color: ZubiaColors.magenta.withValues(alpha: 0.3),
+                Semantics(
+                  button: true,
+                  label: 'Play recording',
+                  child: Tooltip(
+                    message: 'Play recording',
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Playback coming soon!'),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: ZubiaColors.magenta.withValues(alpha: 0.1),
+                          border: Border.all(
+                            color: ZubiaColors.magenta.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.play_arrow,
+                          size: 18,
+                          color: ZubiaColors.magenta,
+                        ),
+                      ),
                     ),
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow,
-                    size: 18,
-                    color: ZubiaColors.magenta,
                   ),
                 ),
               ],
