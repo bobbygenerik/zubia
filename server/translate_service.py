@@ -48,13 +48,8 @@ def _ensure_package_installed(from_lang: str, to_lang: str):
 
     # Check if already installed
     installed = argostranslate.translate.get_installed_languages()
-    from_installed = None
-    to_installed = None
-    for lang in installed:
-        if lang.code == from_lang:
-            from_installed = lang
-        if lang.code == to_lang:
-            to_installed = lang
+    from_installed = next((lang for lang in installed if lang.code == from_lang), None)
+    to_installed = next((lang for lang in installed if lang.code == to_lang), None)
 
     if from_installed and to_installed:
         # Check if translation exists between them
