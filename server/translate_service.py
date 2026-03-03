@@ -117,7 +117,7 @@ def translate(text: str, from_lang: str, to_lang: str) -> str:
 
     try:
         translated = argostranslate.translate.translate(text, from_lang, to_lang)
-        logger.debug(f"Translated [{from_lang}->{to_lang}]: '{text}' -> '{translated}'")
+        logger.debug(f"Translated [{from_lang}->{to_lang}]")
         return translated
     except Exception as e:
         logger.error(f"Translation failed ({from_lang}->{to_lang}): {e}")
