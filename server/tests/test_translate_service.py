@@ -107,5 +107,19 @@ class TestTranslateService(unittest.TestCase):
         # Direct -> catch -> pivot step 1 (success) -> pivot step 2 (fail) -> catch -> return text
         self.assertEqual(translate_service.argostranslate.translate.translate.call_count, 3)
 
+    def test_get_supported_languages(self):
+        """Test that get_supported_languages returns a copy of SUPPORTED_LANGUAGES."""
+        supported_langs = translate_service.get_supported_languages()
+
+        # Check that it returns the correct dictionary content
+        self.assertEqual(supported_langs, translate_service.SUPPORTED_LANGUAGES)
+
+        # Check that it returns a copy, not the exact same object
+        self.assertIsNot(supported_langs, translate_service.SUPPORTED_LANGUAGES)
+
+        # Additional check to ensure modifying the returned dict doesn't affect the original
+        supported_langs["test"] = "Test Language"
+        self.assertNotIn("test", translate_service.SUPPORTED_LANGUAGES)
+
 if __name__ == '__main__':
     unittest.main()
