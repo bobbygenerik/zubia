@@ -7,23 +7,18 @@ import io
 # 1. Mock heavy dependencies BEFORE importing the module under test
 # This prevents ImportError and avoids loading actual heavy models during testing
 mock_piper = MagicMock()
-mock_numpy = MagicMock()
 mock_faster_whisper = MagicMock()
 mock_argostranslate = MagicMock()
 mock_argostranslate_package = MagicMock()
 mock_argostranslate_translate = MagicMock()
 
 sys.modules["piper"] = mock_piper
-sys.modules["numpy"] = mock_numpy
 sys.modules["faster_whisper"] = mock_faster_whisper
 sys.modules["argostranslate"] = mock_argostranslate
 sys.modules["argostranslate.package"] = mock_argostranslate_package
 sys.modules["argostranslate.translate"] = mock_argostranslate_translate
 
-# Configure numpy mock for _generate_silence
-# numpy.zeros(...) returns an array, array.tobytes() returns bytes
-mock_numpy.zeros.return_value.tobytes.return_value = b'\x00' * 100
-mock_numpy.int16 = "int16"  # Just a dummy value
+# Do NOT mock numpy globally since scipy needs it in other tests
 
 # Now import the module under test
 # We need to make sure server is in path if running from root
@@ -39,11 +34,8 @@ class TestTTSService(unittest.TestCase):
 
         # Reset mocks
         mock_piper.reset_mock()
-        mock_numpy.reset_mock()
 
         # Reset specific return values/side effects
-        mock_numpy.zeros.return_value.tobytes.return_value = b'\x00' * 100
-
         # Clear side effects on the global piper mock to prevent test pollution
         sys.modules["piper"].PiperVoice.load.side_effect = None
 
@@ -100,41 +92,61 @@ class TestTTSService(unittest.TestCase):
         mock_voice.synthesize.assert_called_once()
         self.assertIsInstance(result, bytes)
 
-    def test_synthesize_empty_text(self):
+    @patch("server.tts_service._generate_silence")
+    def test_synthesize_empty_text(self, mock_silence):
         """Test that empty text returns silence."""
+        # Setup
+        mock_silence.return_value = b'silence'
+
         # Act
         result = tts_service.synthesize("", "en")
 
         # Assert
         self.assertIsInstance(result, bytes)
-        # Should call numpy.zeros to generate silence
-        mock_numpy.zeros.assert_called()
+        mock_silence.assert_called()
 
     @patch("server.tts_service._download_voice")
-    def test_synthesize_download_failure(self, mock_download):
+    @patch("server.tts_service._generate_silence")
+    def test_synthesize_download_failure(self, mock_silence, mock_download):
         """Test that download failure returns silence."""
         # Setup
         mock_download.side_effect = Exception("Download failed")
+        mock_silence.return_value = b'silence'
 
         # Act
         result = tts_service.synthesize("Hello", "fr")
 
         # Assert
         self.assertIsInstance(result, bytes)
-        # Should return silence (checked via numpy call)
-        mock_numpy.zeros.assert_called()
+        mock_silence.assert_called()
 
     @patch("server.tts_service._download_voice")
-    def test_synthesize_piper_load_failure(self, mock_download):
+    @patch("server.tts_service._generate_silence")
+    def test_synthesize_piper_load_failure(self, mock_silence, mock_download):
         """Test that PiperVoice.load failure returns silence."""
         # Setup
         mock_download.return_value = (Path("a"), Path("b"))
         mock_piper_voice_cls = sys.modules["piper"].PiperVoice
         mock_piper_voice_cls.load.side_effect = Exception("Load failed")
+        mock_silence.return_value = b'silence'
 
         # Act
         result = tts_service.synthesize("Hello", "es")
 
         # Assert
         self.assertIsInstance(result, bytes)
-        mock_numpy.zeros.assert_called()
+        mock_silence.assert_called()
+
+    def test_get_voice_path_fallback(self):
+        """Test that _get_voice_path falls back to English for unknown languages."""
+        # Act
+        onnx_path, json_path, model_name, lang_short, lang_region, name, quality = tts_service._get_voice_path("unknown_lang")
+
+        # Assert
+        self.assertEqual(model_name, tts_service.VOICE_MODELS["en"])
+        self.assertEqual(lang_short, "en")
+        self.assertEqual(lang_region, "en_US")
+        self.assertEqual(name, "lessac")
+        self.assertEqual(quality, "medium")
+        self.assertTrue(str(onnx_path).endswith(f"{model_name}.onnx"))
+        self.assertTrue(str(json_path).endswith(f"{model_name}.onnx.json"))
