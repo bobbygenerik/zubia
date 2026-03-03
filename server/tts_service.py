@@ -157,7 +157,7 @@ def _inner_synthesize(text: str, lang: str, speed: float) -> bytes:
         voice.synthesize(text, wav_file, length_scale=1.0 / speed)
 
     wav_bytes = wav_buffer.getvalue()
-    logger.debug(f"Synthesized {len(wav_bytes)} bytes for lang={lang}: '{text[:50]}...'")
+    logger.debug(f"Synthesized {len(wav_bytes)} bytes for lang={lang}")
     return wav_bytes
 
 
