@@ -10,7 +10,6 @@ import logging
 import os
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Optional
 
 import json
 import uvicorn
