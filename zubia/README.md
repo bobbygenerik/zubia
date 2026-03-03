@@ -4,10 +4,10 @@ Zubia - Real-time audio translation chat
 
 ## Configuration
 
-The server URL defaults to `http://15.204.95.57`. To override this, run the app with the `--dart-define` flag:
+The server URL defaults to `https://15.204.95.57`. To override this, run the app with the `--dart-define` flag:
 
 ```bash
-flutter run --dart-define=SERVER_URL=http://your-server-url.com
+flutter run --dart-define=SERVER_URL=https://your-server-url.com
 ```
 
 ## Getting Started
