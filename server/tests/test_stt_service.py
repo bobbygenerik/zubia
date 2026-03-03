@@ -13,7 +13,31 @@ if "numpy" in sys.modules and hasattr(sys.modules["numpy"], "MagicMock") or "Mag
     del sys.modules["numpy"]
     import numpy
 
-from server.stt_service import transcribe, wav_bytes_to_float32
+from server.stt_service import transcribe, wav_bytes_to_float32, get_model
+import server.stt_service
+
+@patch("server.stt_service.WhisperModel")
+def test_get_model(mock_whisper_model):
+    # Reset the singleton state
+    server.stt_service._model = None
+
+    # First call - should initialize the model
+    model1 = get_model()
+
+    mock_whisper_model.assert_called_once_with(
+        "small",
+        device="cpu",
+        compute_type="int8",
+        cpu_threads=4,
+    )
+    assert model1 == mock_whisper_model.return_value
+
+    # Second call - should return the cached model
+    model2 = get_model()
+
+    # Assert model wasn't initialized again
+    mock_whisper_model.assert_called_once()
+    assert model2 == model1
 
 def test_wav_bytes_to_float32():
     # Create a dummy WAV file in memory
