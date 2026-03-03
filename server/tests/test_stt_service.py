@@ -7,9 +7,11 @@ import pytest
 # We must mock it before importing stt_service
 sys.modules["faster_whisper"] = MagicMock()
 
-# We also need to ensure stt_service can be imported even if it doesn't have scipy yet?
-# No, we assume stt_service will have scipy.
-# But for now, stt_service.py uses np.interp.
+# We can't let previous tests break our imports. If numpy is a mock, import real numpy for scipy.
+import sys
+if "numpy" in sys.modules and hasattr(sys.modules["numpy"], "MagicMock") or "MagicMock" in str(type(sys.modules.get("numpy"))):
+    del sys.modules["numpy"]
+    import numpy
 
 from server.stt_service import transcribe, wav_bytes_to_float32
 
