@@ -1,9 +1,12 @@
+import sys
+from unittest.mock import MagicMock
+sys.modules["numpy"] = MagicMock()
 import unittest
 from unittest.mock import MagicMock, patch
 import sys
 import os
 
-# Add server directory to sys.path so we can import translate_service
+# Add server directory to sys.path so we can from server import translate_service
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Mock argostranslate before importing translate_service
@@ -12,7 +15,7 @@ sys.modules["argostranslate"] = MagicMock()
 sys.modules["argostranslate.package"] = MagicMock()
 sys.modules["argostranslate.translate"] = MagicMock()
 
-import translate_service
+from server import translate_service
 
 class TestTranslateService(unittest.TestCase):
     def setUp(self):
