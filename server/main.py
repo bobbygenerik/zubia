@@ -116,20 +116,6 @@ async def get_languages():
     return JSONResponse(get_supported_languages())
 
 
-@app.get("/api/rooms")
-async def list_rooms():
-    """List all active rooms."""
-    return JSONResponse({
-        rid: {
-            "id": r.id,
-            "name": r.name,
-            "userCount": r.user_count,
-            "createdAt": r.created_at,
-        }
-        for rid, r in rooms.items()
-    })
-
-
 @app.post("/api/rooms")
 async def create_room(data: RoomCreate):
     """Create a new room."""

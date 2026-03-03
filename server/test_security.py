@@ -40,6 +40,11 @@ def test_create_room_valid_name():
     assert response.status_code == 200
     assert response.json()["name"] == valid_name
 
+def test_list_rooms_removed():
+    """Ensure the GET /api/rooms endpoint has been removed to prevent leaking room details."""
+    response = client.get("/api/rooms")
+    assert response.status_code == 405
+
 def test_websocket_join_valid():
     with client.websocket_connect("/ws/room123") as websocket:
         websocket.send_json({"name": "User1", "language": "en"})
