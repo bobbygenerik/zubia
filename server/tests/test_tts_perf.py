@@ -6,23 +6,18 @@ from pathlib import Path
 
 # Mock dependencies before importing the module under test
 mock_piper = MagicMock()
-mock_numpy = MagicMock()
 mock_faster_whisper = MagicMock()
 mock_argostranslate = MagicMock()
 mock_argostranslate_package = MagicMock()
 mock_argostranslate_translate = MagicMock()
 
 sys.modules["piper"] = mock_piper
-sys.modules["numpy"] = mock_numpy
 sys.modules["faster_whisper"] = mock_faster_whisper
 sys.modules["argostranslate"] = mock_argostranslate
 sys.modules["argostranslate.package"] = mock_argostranslate_package
 sys.modules["argostranslate.translate"] = mock_argostranslate_translate
 
-# Configure numpy mock for _generate_silence
-# numpy.zeros(...) returns an array, array.tobytes() returns bytes
-mock_numpy.zeros.return_value.tobytes.return_value = b'\x00' * 100
-mock_numpy.int16 = "int16"  # Just a dummy value
+# Do not mock numpy globally
 
 # Import the service
 from server import tts_service
@@ -37,7 +32,6 @@ class TestTTSPerformance(unittest.TestCase):
 
         # Reset mocks
         mock_piper.reset_mock()
-        mock_numpy.reset_mock()
 
     @patch("server.tts_service._download_voice")
     def test_synthesize_caching_performance(self, mock_download):
