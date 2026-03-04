@@ -27,6 +27,7 @@ class HistoryScreen extends StatelessWidget {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios, size: 20),
+                    tooltip: 'Back to Home',
                     onPressed: () => context.go('/lobby'),
                   ),
                   const SizedBox(width: 24, height: 24, child: ZubiaLogo()),
