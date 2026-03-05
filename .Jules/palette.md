@@ -5,3 +5,7 @@
 ## 2024-05-24 - Feedback for Placeholder UI
 **Learning:** Buttons that do nothing (placeholder for future features) confuse users and feel "broken". Providing a simple `SnackBar` ("Coming soon") transforms a "broken" interaction into a helpful status update.
 **Action:** Never leave `onTap` empty for visible interactive elements.
+
+## 2024-05-25 - Conditional Tooltips for Disabled States
+**Learning:** When attempting to disable a `Tooltip` (e.g., when a button becomes enabled and no longer needs an explanation), passing an empty string (`''`) to the `message` property does not disable the tooltip. Instead, Flutter renders a small, empty black box when the user hovers over the element.
+**Action:** Always conditionally wrap the widget in the `Tooltip` only when the disabled state needs explaining, rather than attempting to pass an empty string to an always-present `Tooltip` widget.
