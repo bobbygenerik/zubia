@@ -129,21 +129,28 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           const Spacer(),
-          ElevatedButton(
-            onPressed: (_nameController.text.trim().isNotEmpty && !_isSaving)
-                ? _saveIdentity
-                : null,
-            child: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('Continue'),
-          ),
+          if (_nameController.text.trim().isEmpty && !_isSaving)
+            Tooltip(
+              message: 'Please enter your name to continue',
+              child: ElevatedButton(
+                onPressed: null,
+                child: const Text('Continue'),
+              ),
+            )
+          else
+            ElevatedButton(
+              onPressed: !_isSaving ? _saveIdentity : null,
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Continue'),
+            ),
           const SizedBox(height: 32),
         ],
       ),
