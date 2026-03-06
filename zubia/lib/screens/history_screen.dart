@@ -28,7 +28,7 @@ class HistoryScreen extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios, size: 20),
                     tooltip: 'Back to Home',
-                    onPressed: () => context.go('/lobby'),
+                    onPressed: () => context.go('/home'),
                   ),
                   const SizedBox(width: 24, height: 24, child: ZubiaLogo()),
                   const SizedBox(width: 10),
@@ -317,7 +317,7 @@ class _BottomNav extends StatelessWidget {
               icon: Icons.home_outlined,
               label: 'Home',
               active: false,
-              onTap: () => context.go('/lobby'),
+              onTap: () => context.go('/home'),
             ),
             ZubiaNavItem(
               icon: Icons.history,

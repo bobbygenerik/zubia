@@ -13,6 +13,7 @@ class NewChatScreen extends StatefulWidget {
 
 class _NewChatScreenState extends State<NewChatScreen> {
   bool _isLoading = true;
+  String? _startingThreadUserId;
   List<Map<String, dynamic>> _users = [];
   List<Map<String, dynamic>> _filteredUsers = [];
   final _searchController = TextEditingController();
@@ -50,15 +51,17 @@ class _NewChatScreenState extends State<NewChatScreen> {
   }
 
   Future<void> _startThread(String otherUserId, String otherUserName) async {
+    if (_startingThreadUserId != null) return;
+
     final state = context.read<AppState>();
-    setState(() => _isLoading = true);
+    setState(() => _startingThreadUserId = otherUserId);
 
     final threadId = await state.createThreadWithUser(otherUserId);
     if (threadId != null && mounted) {
       state.joinThread(threadId, otherUserName);
       context.go('/chat');
     } else if (mounted) {
-      setState(() => _isLoading = false);
+      setState(() => _startingThreadUserId = null);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Failed to create chat')));
@@ -167,7 +170,19 @@ class _NewChatScreenState extends State<NewChatScreen> {
                             fontSize: 13,
                           ),
                         ),
-                        onTap: () => _startThread(u['id'], name),
+                        trailing: _startingThreadUserId == u['id']
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: ZubiaColors.magenta,
+                                ),
+                              )
+                            : null,
+                        onTap: _startingThreadUserId != null
+                            ? null
+                            : () => _startThread(u['id'], name),
                       );
                     },
                   ),
