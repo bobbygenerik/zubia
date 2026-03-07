@@ -63,16 +63,41 @@ class _ChatScreenState extends State<ChatScreen> {
 
                 // ── Translation Feed ──
                 Expanded(
-                  child: ListView.builder(
-                    controller: _feedScroll,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    itemCount: state.feed.length,
-                    itemBuilder: (context, i) =>
-                        _FeedItem(entry: state.feed[i], state: state),
-                  ),
+                  child: state.feed.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.mic_none,
+                                size: 48,
+                                color: ZubiaColors.textMuted.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                state.mode == 'walkie'
+                                    ? 'Hold the mic to start talking'
+                                    : 'Tap the mic to start talking',
+                                style: const TextStyle(
+                                  color: ZubiaColors.textMuted,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          controller: _feedScroll,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          itemCount: state.feed.length,
+                          itemBuilder: (context, i) =>
+                              _FeedItem(entry: state.feed[i], state: state),
+                        ),
                 ),
 
                 // ── Controls ──
