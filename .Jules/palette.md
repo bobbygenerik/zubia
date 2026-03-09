@@ -9,3 +9,7 @@
 ## 2024-05-25 - Conditional Tooltips for Disabled States
 **Learning:** When attempting to disable a `Tooltip` (e.g., when a button becomes enabled and no longer needs an explanation), passing an empty string (`''`) to the `message` property does not disable the tooltip. Instead, Flutter renders a small, empty black box when the user hovers over the element.
 **Action:** Always conditionally wrap the widget in the `Tooltip` only when the disabled state needs explaining, rather than attempting to pass an empty string to an always-present `Tooltip` widget.
+
+## 2024-05-26 - Helpful Empty States with Actions
+**Learning:** Empty states with static text (like "No users found") leave the user guessing what went wrong, and require manual actions to fix the problem. By reflecting the search input back into the empty state ("No users match [search_query]") and adding a clear search action, the error is immediately clear, and recovery is actionable.
+**Action:** Always provide the user's input context inside of search empty states, and add an action like "Clear Search" or "Reset Filters" so the user can easily proceed.

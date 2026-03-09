@@ -133,13 +133,29 @@ class _NewChatScreenState extends State<NewChatScreen> {
                           color: ZubiaColors.textMuted.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          'No users found',
-                          style: TextStyle(
+                        Text(
+                          _searchController.text.isNotEmpty
+                              ? 'No users match "${_searchController.text}"'
+                              : 'No users found',
+                          style: const TextStyle(
                             color: ZubiaColors.textMuted,
                             fontSize: 16,
                           ),
                         ),
+                        if (_searchController.text.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          TextButton.icon(
+                            onPressed: () {
+                              _searchController.clear();
+                              _filter('');
+                            },
+                            icon: const Icon(Icons.clear, size: 18),
+                            label: const Text('Clear Search'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: ZubiaColors.magenta,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   )
