@@ -481,7 +481,15 @@ class _MicButton extends StatelessWidget {
         message: semanticHint,
         child: GestureDetector(
           onTap: isWalkie
-              ? null
+              ? () {
+                  HapticFeedback.lightImpact();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Hold to record, release to send'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
               : () {
                   HapticFeedback.selectionClick();
                   if (recording) {
