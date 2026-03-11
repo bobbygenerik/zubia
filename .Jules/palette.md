@@ -13,3 +13,7 @@
 ## 2024-05-26 - Helpful Empty States with Actions
 **Learning:** Empty states with static text (like "No users found") leave the user guessing what went wrong, and require manual actions to fix the problem. By reflecting the search input back into the empty state ("No users match [search_query]") and adding a clear search action, the error is immediately clear, and recovery is actionable.
 **Action:** Always provide the user's input context inside of search empty states, and add an action like "Clear Search" or "Reset Filters" so the user can easily proceed.
+
+## 2024-05-27 - Smoothing Binary UI Transitions
+**Learning:** Binary state changes (like switching an icon or replacing an empty state with a list) feel jarring when they snap instantly. Using `AnimatedSwitcher` to cross-fade these components significantly increases the perceived polish and quality of the interaction. However, this often breaks synchronous widget tests because `AnimatedSwitcher` temporarily holds multiple widgets in the tree during the transition.
+**Action:** Use `AnimatedSwitcher` for state-driven UI swaps, ensure `ValueKey`s are present to trigger the transition, and update associated widget tests to use `pumpAndSettle()` and semantic-based finders (rather than simple `find.byIcon()`) to account for the animation duration.
