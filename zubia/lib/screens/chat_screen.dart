@@ -63,41 +63,46 @@ class _ChatScreenState extends State<ChatScreen> {
 
                 // ── Translation Feed ──
                 Expanded(
-                  child: state.feed.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.mic_none,
-                                size: 48,
-                                color: ZubiaColors.textMuted.withValues(
-                                  alpha: 0.5,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: state.feed.isEmpty
+                        ? Center(
+                            key: const ValueKey('empty_feed'),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.mic_none,
+                                  size: 48,
+                                  color: ZubiaColors.textMuted.withValues(
+                                    alpha: 0.5,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                state.mode == 'walkie'
-                                    ? 'Hold the mic to start talking'
-                                    : 'Tap the mic to start talking',
-                                style: const TextStyle(
-                                  color: ZubiaColors.textMuted,
-                                  fontSize: 16,
+                                const SizedBox(height: 16),
+                                Text(
+                                  state.mode == 'walkie'
+                                      ? 'Hold the mic to start talking'
+                                      : 'Tap the mic to start talking',
+                                  style: const TextStyle(
+                                    color: ZubiaColors.textMuted,
+                                    fontSize: 16,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            key: const ValueKey('feed_list'),
+                            controller: _feedScroll,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            itemCount: state.feed.length,
+                            itemBuilder: (context, i) =>
+                                _FeedItem(entry: state.feed[i], state: state),
                           ),
-                        )
-                      : ListView.builder(
-                          controller: _feedScroll,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          itemCount: state.feed.length,
-                          itemBuilder: (context, i) =>
-                              _FeedItem(entry: state.feed[i], state: state),
-                        ),
+                  ),
                 ),
 
                 // ── Controls ──
@@ -289,11 +294,15 @@ class _ControlsBar extends StatelessWidget {
           // Mic button
           _MicButton(state: state),
           const SizedBox(height: 6),
-          Text(
-            state.mode == 'walkie'
-                ? (state.isRecording ? 'Release to send' : 'Hold to talk')
-                : (state.isRecording ? 'Tap to stop' : 'Tap to stream'),
-            style: TextStyle(fontSize: 12, color: ZubiaColors.textMuted),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Text(
+              state.mode == 'walkie'
+                  ? (state.isRecording ? 'Release to send' : 'Hold to talk')
+                  : (state.isRecording ? 'Tap to stop' : 'Tap to stream'),
+              key: ValueKey('${state.mode}_${state.isRecording}'),
+              style: TextStyle(fontSize: 12, color: ZubiaColors.textMuted),
+            ),
           ),
           const SizedBox(height: 8),
           // Volume
@@ -531,10 +540,21 @@ class _MicButton extends StatelessWidget {
                 ),
               ],
             ),
-            child: Icon(
-              recording ? Icons.stop : Icons.mic,
-              size: 32,
-              color: Colors.white,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, animation) {
+                return ScaleTransition(
+                  scale: animation,
+                  child: FadeTransition(opacity: animation, child: child),
+                );
+              },
+              child: Icon(
+                recording ? Icons.stop : Icons.mic,
+                key: ValueKey<bool>(recording),
+                size: 32,
+                color: Colors.white,
+                semanticLabel: recording ? 'Recording' : 'Microphone',
+              ),
             ),
           ),
         ),

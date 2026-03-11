@@ -107,29 +107,44 @@ void main() {
     // Mode is now Walkie-talkie.
     expect(state.mode, 'walkie');
 
-    final micButton = find
-        .byType(GestureDetector)
-        .last; // The mic button is likely the last GestureDetector or found by icon
-    // Better finder:
-    final micIcon = find.byIcon(Icons.mic);
+    // Better finder: We find the specific interactive button wrapper, not just any semantics
+    // There is an outer Semantics wrapping the whole MicButton
+    final micButtonFinder = find.byWidgetPredicate((widget) {
+      if (widget is Semantics) {
+        final label = widget.properties.label;
+        if (label != null && label == 'Walkie Talkie Microphone') {
+          return true;
+        }
+      }
+      return false;
+    });
 
     // Long press start
-    final gesture = await tester.startGesture(tester.getCenter(micIcon));
+    final gesture = await tester.startGesture(tester.getCenter(micButtonFinder));
     await tester.pump(
       const Duration(milliseconds: 500),
     ); // Ensure long press is recognized
 
     // Long press end
     await gesture.up();
-    await tester.pump(); // Trigger onLongPressEnd
+    await tester.pumpAndSettle(); // Trigger onLongPressEnd and animations
 
     // 3. Switch back to Real-time
     await tester.tap(find.text('Real-time'));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     // 4. Test Real-time Mic Button (Tap)
-    await tester.tap(micIcon);
-    await tester.pump();
+    final realTimeMicButtonFinder = find.byWidgetPredicate((widget) {
+      if (widget is Semantics) {
+        final label = widget.properties.label;
+        if (label != null && label == 'Start Recording') {
+          return true;
+        }
+      }
+      return false;
+    });
+    await tester.tap(realTimeMicButtonFinder);
+    await tester.pumpAndSettle();
 
     // Clean up mock
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
