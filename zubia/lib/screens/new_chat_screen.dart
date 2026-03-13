@@ -85,6 +85,7 @@ class _NewChatScreenState extends State<NewChatScreen> {
             child: TextField(
               controller: _searchController,
               onChanged: _filter,
+              autofocus: true,
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: 'Search users...',

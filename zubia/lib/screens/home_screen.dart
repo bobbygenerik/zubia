@@ -99,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
           TextField(
             controller: _nameController,
             onChanged: (_) => setState(() {}),
+            autofocus: true,
             textCapitalization: TextCapitalization.words,
             textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
