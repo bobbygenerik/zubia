@@ -353,7 +353,7 @@ class _BottomNav extends StatelessWidget {
                     child: const SizedBox(
                       width: 36,
                       height: 36,
-                      child: ZubiaLogo(),
+                      child: ZubiaLogo(excludeFromSemantics: true),
                     ),
                   ),
                 ),

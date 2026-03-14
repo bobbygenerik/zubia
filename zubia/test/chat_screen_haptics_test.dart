@@ -120,7 +120,9 @@ void main() {
     });
 
     // Long press start
-    final gesture = await tester.startGesture(tester.getCenter(micButtonFinder));
+    final gesture = await tester.startGesture(
+      tester.getCenter(micButtonFinder),
+    );
     await tester.pump(
       const Duration(milliseconds: 500),
     ); // Ensure long press is recognized

@@ -30,7 +30,11 @@ class HistoryScreen extends StatelessWidget {
                     tooltip: 'Back to Home',
                     onPressed: () => context.go('/home'),
                   ),
-                  const SizedBox(width: 24, height: 24, child: ZubiaLogo()),
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: ZubiaLogo(excludeFromSemantics: true),
+                  ),
                   const SizedBox(width: 10),
                   const Text(
                     'Zubia',
@@ -360,7 +364,7 @@ class _BottomNav extends StatelessWidget {
                     child: const SizedBox(
                       width: 36,
                       height: 36,
-                      child: ZubiaLogo(),
+                      child: ZubiaLogo(excludeFromSemantics: true),
                     ),
                   ),
                 ),

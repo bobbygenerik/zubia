@@ -16,7 +16,11 @@ class OnboardingScreen extends StatelessWidget {
             children: [
               const Spacer(flex: 2),
               // Logo
-              const SizedBox(width: 200, height: 200, child: ZubiaLogo()),
+              const SizedBox(
+                width: 200,
+                height: 200,
+                child: ZubiaLogo(excludeFromSemantics: true),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Zubia',
