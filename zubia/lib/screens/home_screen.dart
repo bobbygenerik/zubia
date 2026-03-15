@@ -102,8 +102,9 @@ class _HomeScreenState extends State<HomeScreen> {
             autofocus: true,
             textCapitalization: TextCapitalization.words,
             textInputAction: TextInputAction.next,
+            maxLength: 50,
             decoration: const InputDecoration(
-              labelText: 'Name',
+              labelText: 'Name *',
               hintText: 'Your name',
               prefixIcon: Icon(Icons.person_outline, size: 20),
             ),
