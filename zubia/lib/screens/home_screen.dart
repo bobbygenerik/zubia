@@ -100,10 +100,11 @@ class _HomeScreenState extends State<HomeScreen> {
             controller: _nameController,
             onChanged: (_) => setState(() {}),
             autofocus: true,
+            maxLength: 50,
             textCapitalization: TextCapitalization.words,
             textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
-              labelText: 'Name',
+              labelText: 'Name *',
               hintText: 'Your name',
               prefixIcon: Icon(Icons.person_outline, size: 20),
             ),
