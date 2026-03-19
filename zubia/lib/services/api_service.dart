@@ -49,9 +49,20 @@ class ApiService {
     return null;
   }
 
-  Future<List<Map<String, dynamic>>> getUsers() async {
+  Future<bool> verifyUser(String userId) async {
     try {
-      final res = await _client.get(Uri.parse('$baseUrl/api/users'));
+      final res = await _client.get(Uri.parse('$baseUrl/api/users/$userId'));
+      return res.statusCode == 200;
+    } catch (_) {}
+    return false;
+  }
+
+  Future<List<Map<String, dynamic>>> searchUsers(String query) async {
+    try {
+      final uri = Uri.parse('$baseUrl/api/users').replace(
+        queryParameters: query.isNotEmpty ? {'name': query} : null,
+      );
+      final res = await _client.get(uri);
       if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body);
         return data.cast<Map<String, dynamic>>().toList();
@@ -74,7 +85,7 @@ class ApiService {
   Future<String?> createThread(String user1Id, String user2Id) async {
     try {
       final res = await _client.post(
-        Uri.parse('$baseUrl/api/threads/new'),
+        Uri.parse('$baseUrl/api/threads'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'user1_id': user1Id, 'user2_id': user2Id}),
       );

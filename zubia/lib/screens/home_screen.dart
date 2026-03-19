@@ -45,12 +45,24 @@ class _HomeScreenState extends State<HomeScreen> {
     if (name.isEmpty) return;
     final state = context.read<AppState>();
     setState(() => _isSaving = true);
-    await state.registerAndSaveIdentity(
+    final success = await state.registerAndSaveIdentity(
       name,
       state.userLanguage.isNotEmpty ? state.userLanguage : 'en',
     );
-    await state.loadThreads();
-    if (mounted) setState(() => _isSaving = false);
+    if (success) {
+      await state.loadThreads();
+    }
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not create profile. Check server connection and try again.',
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -365,21 +377,13 @@ class _BottomNav extends StatelessWidget {
               icon: Icons.favorite_outline,
               label: 'Saved',
               active: currentIndex == 2,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Saved items coming soon!')),
-                );
-              },
+              onTap: () => context.go('/saved'),
             ),
             ZubiaNavItem(
               icon: Icons.settings_outlined,
               label: 'Settings',
               active: currentIndex == 3,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Settings coming soon!')),
-                );
-              },
+              onTap: () => context.go('/settings'),
             ),
           ],
         ),

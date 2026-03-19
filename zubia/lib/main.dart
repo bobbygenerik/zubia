@@ -11,6 +11,8 @@ import 'screens/home_screen.dart';
 import 'screens/new_chat_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/history_screen.dart';
+import 'screens/saved_screen.dart';
+import 'screens/settings_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +43,11 @@ final _router = GoRouter(
     GoRoute(
       path: '/history',
       builder: (context, state) => const HistoryScreen(),
+    ),
+    GoRoute(path: '/saved', builder: (context, state) => const SavedScreen()),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
     ),
   ],
 );

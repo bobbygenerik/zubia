@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../providers/app_state.dart';
@@ -24,6 +25,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _requestMicPermission() async {
+    if (kIsWeb) {
+      return;
+    }
     await Permission.microphone.request();
   }
 
@@ -123,6 +127,45 @@ class _FeedItem extends StatelessWidget {
   final AppState state;
   const _FeedItem({required this.entry, required this.state});
 
+  bool get _canSave {
+    return (entry.originalText?.trim().isNotEmpty ?? false) &&
+        (entry.translatedText?.trim().isNotEmpty ?? false) &&
+        (entry.fromLanguage?.trim().isNotEmpty ?? false) &&
+        (entry.toLanguage?.trim().isNotEmpty ?? false);
+  }
+
+  Future<void> _toggleSave(BuildContext context) async {
+    if (!_canSave) return;
+
+    final original = entry.originalText!.trim();
+    final translated = entry.translatedText!.trim();
+    final from = entry.fromLanguage!.toLowerCase().trim();
+    final to = entry.toLanguage!.toLowerCase().trim();
+
+    final wasSaved = state.isPhraseSaved(
+      originalText: original,
+      translatedText: translated,
+      fromLanguage: from,
+      toLanguage: to,
+    );
+
+    HapticFeedback.selectionClick();
+    await state.toggleSavedPhrase(
+      originalText: original,
+      translatedText: translated,
+      fromLanguage: from,
+      toLanguage: to,
+    );
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(wasSaved ? 'Removed from saved' : 'Saved phrase'),
+        duration: const Duration(milliseconds: 1000),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (entry.type == 'system') {
@@ -149,6 +192,14 @@ class _FeedItem extends StatelessWidget {
     }
 
     final isMe = entry.fromUser == state.userName;
+    final isSaved = _canSave
+        ? state.isPhraseSaved(
+            originalText: entry.originalText!.trim(),
+            translatedText: entry.translatedText!.trim(),
+            fromLanguage: entry.fromLanguage!.toLowerCase().trim(),
+            toLanguage: entry.toLanguage!.toLowerCase().trim(),
+          )
+        : false;
     final initial = (entry.fromUser ?? '?')[0].toUpperCase();
 
     return Padding(
@@ -246,6 +297,26 @@ class _FeedItem extends StatelessWidget {
                       entry.translatedText!,
                       style: const TextStyle(fontSize: 15),
                     ),
+                  if (_canSave) ...[
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        onPressed: () => _toggleSave(context),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 24,
+                          minHeight: 24,
+                        ),
+                        icon: Icon(
+                          isSaved ? Icons.bookmark : Icons.bookmark_border,
+                          size: 18,
+                          color: ZubiaColors.magenta,
+                        ),
+                        tooltip: isSaved ? 'Remove saved' : 'Save phrase',
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

@@ -17,10 +17,11 @@ from stt_service import transcribe, get_model
 from translate_service import translate as translate_text, get_supported_languages
 from tts_service import synthesize
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import ValidationError
 
-from schemas import RoomCreate, UserJoin
+from schemas import RoomCreate, UserJoin, UserRegister, ThreadCreate
 
 # Configure logging
 logging.basicConfig(
@@ -44,6 +45,15 @@ APK_PATH = Path(
 # Application
 # ---------------------------------------------------------------------------
 app = FastAPI(title="Zubia", version="1.0.0")
+
+# Allow browser clients (Flutter web) to call the API from another origin.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 async def serve_root():
@@ -101,8 +111,15 @@ class Room:
         return len(self.users)
 
 
-# Global room registry
+# Global registries
 rooms: dict[str, Room] = {}
+users_db: dict[str, dict] = {}           # userId -> {id, name, language}
+threads_db: dict[str, dict] = {}         # threadKey -> {id, user1_id, user2_id}
+user_threads: dict[str, list[str]] = {}  # userId -> [threadKey, ...]
+
+
+def _thread_key(user1_id: str, user2_id: str) -> str:
+    return '_'.join(sorted([user1_id, user2_id]))
 
 
 
@@ -125,6 +142,78 @@ async def create_room(data: RoomCreate):
     return JSONResponse({"id": room_id, "name": room_name})
 
 
+@app.post("/api/users/register")
+async def register_user(data: UserRegister):
+    """Register a new user."""
+    user_id = str(uuid.uuid4())[:8]
+    users_db[user_id] = {"id": user_id, "name": data.name, "language": data.language}
+    logger.info(f"User registered: {data.name} ({user_id})")
+    return JSONResponse({"id": user_id, "name": data.name, "language": data.language})
+
+
+@app.get("/api/users/{user_id}")
+async def get_user(user_id: str):
+    """Get a user by ID."""
+    user = users_db.get(user_id)
+    if not user:
+        return JSONResponse({"error": "User not found"}, status_code=404)
+    return JSONResponse(user)
+
+
+@app.get("/api/users")
+async def search_users(name: str = ""):
+    """Search users by name (substring match)."""
+    name_lower = name.lower().strip()
+    if not name_lower:
+        results = list(users_db.values())
+    else:
+        results = [u for u in users_db.values() if name_lower in u["name"].lower()]
+    return JSONResponse(results)
+
+
+@app.post("/api/threads")
+async def create_thread(data: ThreadCreate):
+    """Create or retrieve an existing thread between two users."""
+    if data.user1_id not in users_db or data.user2_id not in users_db:
+        return JSONResponse({"error": "User not found"}, status_code=404)
+
+    key = _thread_key(data.user1_id, data.user2_id)
+    if key in threads_db:
+        return JSONResponse({"id": threads_db[key]["id"], "existing": True})
+
+    threads_db[key] = {"id": key, "user1_id": data.user1_id, "user2_id": data.user2_id}
+    for uid in [data.user1_id, data.user2_id]:
+        user_threads.setdefault(uid, []).append(key)
+
+    # Pre-create the room so the WebSocket endpoint finds it
+    rooms[key] = Room(id=key, name=key)
+    logger.info(f"Thread created: {key}")
+    return JSONResponse({"id": key, "existing": False})
+
+
+@app.get("/api/threads/{user_id}")
+async def get_threads(user_id: str):
+    """List all threads for a user."""
+    if user_id not in users_db:
+        return JSONResponse({"error": "User not found"}, status_code=404)
+
+    result = []
+    for key in user_threads.get(user_id, []):
+        thread = threads_db.get(key)
+        if not thread:
+            continue
+        other_id = thread["user2_id"] if thread["user1_id"] == user_id else thread["user1_id"]
+        other = users_db.get(other_id)
+        if other:
+            result.append({
+                "id": thread["id"],
+                "otherUserId": other_id,
+                "otherUserName": other["name"],
+                "otherUserLanguage": other["language"],
+            })
+    return JSONResponse(result)
+
+
 # ---------------------------------------------------------------------------
 # WebSocket Audio Pipeline
 # ---------------------------------------------------------------------------
@@ -140,12 +229,15 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         await websocket.close(code=4000, reason="Join timeout")
         return
 
-    user_id = str(uuid.uuid4())[:8]
-
     try:
         user_data = UserJoin(**join_msg)
-        user_name = user_data.name if user_data.name else f"User-{user_id}"
-        user_lang = user_data.language
+        stored = users_db.get(user_data.userId)
+        if stored is None:
+            await websocket.close(code=4001, reason="Unknown user")
+            return
+        user_id = user_data.userId
+        user_name = stored["name"]
+        user_lang = stored["language"]
     except ValidationError as e:
         logger.error(f"Invalid join message: {e}")
         await websocket.close(code=4002, reason="Invalid join data")
@@ -229,6 +321,7 @@ async def handle_control_message(room: Room, user: User, data: dict):
             "type": "user_muted",
             "userId": user.id,
             "userName": user.name,
+            "users": get_user_list(room),
         })
 
     elif msg_type == "unmute":
@@ -238,11 +331,14 @@ async def handle_control_message(room: Room, user: User, data: dict):
             "type": "user_unmuted",
             "userId": user.id,
             "userName": user.name,
+            "users": get_user_list(room),
         })
 
     elif msg_type == "change_language":
         new_lang = data.get("language", user.language)
         user.language = new_lang
+        if user.id in users_db:
+            users_db[user.id]["language"] = new_lang
         user.clear_cache()
         await broadcast_system(room, {
             "type": "user_language_changed",

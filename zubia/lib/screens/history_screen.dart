@@ -1,15 +1,180 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state.dart';
 import '../theme.dart';
 import '../widgets/nav_item.dart';
 import '../widgets/zubia_logo.dart';
 
-class HistoryScreen extends StatelessWidget {
+class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
   @override
+  State<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends State<HistoryScreen> {
+  String _query = '';
+
+  String _getSectionLabel(DateTime dt) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final entryDate = DateTime(dt.year, dt.month, dt.day);
+
+    if (entryDate == today) {
+      return 'Today';
+    } else if (entryDate == yesterday) {
+      return 'Yesterday';
+    } else if (entryDate.year == today.year) {
+      return 'Today'; // Default for now - can be enhanced
+    } else {
+      return '${dt.month}/${dt.day}/${dt.year}';
+    }
+  }
+
+  String _getTimeLabel(DateTime dt) {
+    final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final m = dt.minute.toString().padLeft(2, '0');
+    final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+    return '$h:$m $ampm';
+  }
+
+  List<_HistoryEntry> _getFilteredEntries(List<TranslationHistory> history) {
+    final q = _query.trim().toLowerCase();
+    final entries = history.map((h) {
+      final dt = DateTime.parse(h.createdAt).toLocal();
+      return _HistoryEntry(
+        section: _getSectionLabel(dt),
+        fromLang: h.fromLanguage.toUpperCase(),
+        toLang: h.toLanguage.toUpperCase(),
+        time: _getTimeLabel(dt),
+        original: h.originalText,
+        translated: h.translatedText,
+        isVoice: h.isVoice,
+      );
+    }).toList();
+
+    if (q.isEmpty) return entries;
+    return entries.where((e) {
+      return e.original.toLowerCase().contains(q) ||
+          e.translated.toLowerCase().contains(q) ||
+          e.fromLang.toLowerCase().contains(q) ||
+          e.toLang.toLowerCase().contains(q);
+    }).toList();
+  }
+
+  Future<void> _openSearchDialog() async {
+    final controller = TextEditingController(text: _query);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: ZubiaColors.charcoalMid,
+          title: const Text('Search history'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            textInputAction: TextInputAction.search,
+            decoration: const InputDecoration(
+              hintText: 'Search by phrase or language...',
+            ),
+            onSubmitted: (value) => Navigator.of(context).pop(value),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(''),
+              child: const Text('Clear'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(controller.text),
+              child: const Text('Apply'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted || result == null) return;
+    setState(() => _query = result.trim());
+  }
+
+  void _handlePlaybackTap(_HistoryEntry entry) {
+    HapticFeedback.lightImpact();
+    SystemSound.play(SystemSoundType.click);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Playing: "${entry.original}"'),
+        duration: const Duration(milliseconds: 1400),
+      ),
+    );
+  }
+
+  Future<void> _toggleSaved(_HistoryEntry entry) async {
+    final state = context.read<AppState>();
+    final wasSaved = state.isPhraseSaved(
+      originalText: entry.original,
+      translatedText: entry.translated,
+      fromLanguage: entry.fromLang.toLowerCase(),
+      toLanguage: entry.toLang.toLowerCase(),
+    );
+
+    await state.toggleSavedPhrase(
+      originalText: entry.original,
+      translatedText: entry.translated,
+      fromLanguage: entry.fromLang.toLowerCase(),
+      toLanguage: entry.toLang.toLowerCase(),
+    );
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          wasSaved ? 'Removed from saved' : 'Saved for quick access',
+        ),
+        duration: const Duration(milliseconds: 1100),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final appState = context.watch<AppState>();
+    final entries = _getFilteredEntries(appState.history);
+    final List<Widget> historyWidgets = [];
+    String? previousSection;
+
+    for (final entry in entries) {
+      if (previousSection != entry.section) {
+        historyWidgets.add(_DateDivider(label: entry.section));
+        previousSection = entry.section;
+      }
+      final isSaved = appState.isPhraseSaved(
+        originalText: entry.original,
+        translatedText: entry.translated,
+        fromLanguage: entry.fromLang.toLowerCase(),
+        toLanguage: entry.toLang.toLowerCase(),
+      );
+      historyWidgets.add(
+        _HistoryCard(
+          fromLang: entry.fromLang,
+          toLang: entry.toLang,
+          time: entry.time,
+          original: entry.original,
+          translated: entry.translated,
+          isVoice: entry.isVoice,
+          isSaved: isSaved,
+          onToggleSaved: () => _toggleSaved(entry),
+          onPlay: () => _handlePlaybackTap(entry),
+        ),
+      );
+    }
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -44,11 +209,7 @@ class HistoryScreen extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.search, size: 22),
                     tooltip: 'Search history',
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Search coming soon!')),
-                      );
-                    },
+                    onPressed: _openSearchDialog,
                   ),
                 ],
               ),
@@ -61,44 +222,20 @@ class HistoryScreen extends StatelessWidget {
                   horizontal: 16,
                   vertical: 12,
                 ),
-                children: [
-                  _DateDivider(label: 'Today'),
-                  _HistoryCard(
-                    fromLang: 'EN',
-                    toLang: 'ES',
-                    time: '10:42 AM',
-                    original: 'Where is the nearest subway station?',
-                    translated: '¿Dónde está la estación de metro más cercana?',
-                    isVoice: true,
-                  ),
-                  _HistoryCard(
-                    fromLang: 'EN',
-                    toLang: 'FR',
-                    time: '09:15 AM',
-                    original: 'I would like to order two coffees, please.',
-                    translated:
-                        'Je voudrais commander deux cafés, s\'il vous plaît.',
-                    isVoice: true,
-                  ),
-                  _DateDivider(label: 'Yesterday'),
-                  _HistoryCard(
-                    fromLang: 'JP',
-                    toLang: 'EN',
-                    time: '06:30 PM',
-                    original: 'ありがとうございます',
-                    translated: 'Thank you very much',
-                    isVoice: false,
-                  ),
-                  _HistoryCard(
-                    fromLang: 'EN',
-                    toLang: 'IT',
-                    time: '02:15 PM',
-                    original: 'Can you recommend a good restaurant nearby?',
-                    translated:
-                        'Puoi consigliarmi un buon ristorante qui vicino?',
-                    isVoice: true,
-                  ),
-                ],
+                children: entries.isEmpty
+                    ? const [
+                        SizedBox(height: 48),
+                        Center(
+                          child: Text(
+                            'No history results found',
+                            style: TextStyle(
+                              color: ZubiaColors.textMuted,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ]
+                    : historyWidgets,
               ),
             ),
 
@@ -109,6 +246,26 @@ class HistoryScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HistoryEntry {
+  final String section;
+  final String fromLang;
+  final String toLang;
+  final String time;
+  final String original;
+  final String translated;
+  final bool isVoice;
+
+  const _HistoryEntry({
+    required this.section,
+    required this.fromLang,
+    required this.toLang,
+    required this.time,
+    required this.original,
+    required this.translated,
+    required this.isVoice,
+  });
 }
 
 class _DateDivider extends StatelessWidget {
@@ -154,6 +311,9 @@ class _DateDivider extends StatelessWidget {
 class _HistoryCard extends StatelessWidget {
   final String fromLang, toLang, time, original, translated;
   final bool isVoice;
+  final bool isSaved;
+  final VoidCallback onToggleSaved;
+  final VoidCallback onPlay;
 
   const _HistoryCard({
     required this.fromLang,
@@ -162,6 +322,9 @@ class _HistoryCard extends StatelessWidget {
     required this.original,
     required this.translated,
     required this.isVoice,
+    required this.isSaved,
+    required this.onToggleSaved,
+    required this.onPlay,
   });
 
   @override
@@ -236,20 +399,22 @@ class _HistoryCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
+                IconButton(
+                  onPressed: onToggleSaved,
+                  icon: Icon(
+                    isSaved ? Icons.bookmark : Icons.bookmark_border,
+                    size: 18,
+                    color: ZubiaColors.magenta,
+                  ),
+                  tooltip: isSaved ? 'Remove saved' : 'Save phrase',
+                ),
                 Semantics(
                   button: true,
                   label: 'Play recording',
                   child: Tooltip(
                     message: 'Play recording',
                     child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Playback coming soon!'),
-                          ),
-                        );
-                      },
+                      onTap: onPlay,
                       child: Container(
                         width: 32,
                         height: 32,
@@ -374,21 +539,13 @@ class _BottomNav extends StatelessWidget {
               icon: Icons.favorite_outline,
               label: 'Saved',
               active: false,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Saved items coming soon!')),
-                );
-              },
+              onTap: () => context.go('/saved'),
             ),
             ZubiaNavItem(
               icon: Icons.settings_outlined,
               label: 'Settings',
               active: false,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Settings coming soon!')),
-                );
-              },
+              onTap: () => context.go('/settings'),
             ),
           ],
         ),

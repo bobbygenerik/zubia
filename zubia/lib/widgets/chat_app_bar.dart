@@ -7,6 +7,48 @@ class ChatAppBar extends StatelessWidget {
   final AppState state;
   const ChatAppBar({super.key, required this.state});
 
+  Future<void> _confirmClearSaved(BuildContext context) async {
+    if (state.savedPhrases.isEmpty) return;
+    final snapshot = List<SavedPhrase>.from(state.savedPhrases);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Clear saved phrases?'),
+          content: const Text(
+            'This will remove all saved phrases from this device.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Clear all'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+    await state.clearSavedPhrases();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Cleared all saved phrases'),
+        action: SnackBarAction(
+          label: 'UNDO',
+          onPressed: () {
+            state.restoreSavedPhrases(snapshot);
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -50,6 +92,44 @@ class ChatAppBar extends StatelessWidget {
                     ),
                   ],
                 ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Open Saved Phrases (long-press to clear all)',
+            onPressed: () => context.go('/saved'),
+            onLongPress: () => _confirmClearSaved(context),
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.bookmark_border, size: 22),
+                if (state.savedPhrases.isNotEmpty)
+                  Positioned(
+                    right: -6,
+                    top: -6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ZubiaColors.magenta,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(minWidth: 16),
+                      child: Text(
+                        state.savedPhrases.length > 99
+                            ? '99+'
+                            : state.savedPhrases.length.toString(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

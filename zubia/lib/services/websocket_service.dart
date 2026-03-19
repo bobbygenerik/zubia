@@ -31,7 +31,7 @@ class WebSocketService {
 
   void connect(String threadId, String userId) {
     final wsUrl = baseUrl.replaceFirst('http', 'ws');
-    _channel = _connect(Uri.parse('$wsUrl/ws/thread/$threadId'));
+    _channel = _connect(Uri.parse('$wsUrl/ws/$threadId'));
 
     // Send join message
     _channel!.sink.add(jsonEncode({'userId': userId}));

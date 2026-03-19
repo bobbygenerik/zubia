@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
@@ -28,6 +29,49 @@ class FeedEntry {
   }) : timestamp = DateTime.now();
 }
 
+/// Translation history entry - persisted across sessions.
+class TranslationHistory {
+  final String originalText;
+  final String translatedText;
+  final String fromLanguage;
+  final String toLanguage;
+  final String fromUser;
+  final String createdAt;
+  final bool isVoice;
+
+  const TranslationHistory({
+    required this.originalText,
+    required this.translatedText,
+    required this.fromLanguage,
+    required this.toLanguage,
+    required this.fromUser,
+    required this.createdAt,
+    required this.isVoice,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'originalText': originalText,
+    'translatedText': translatedText,
+    'fromLanguage': fromLanguage,
+    'toLanguage': toLanguage,
+    'fromUser': fromUser,
+    'createdAt': createdAt,
+    'isVoice': isVoice,
+  };
+
+  factory TranslationHistory.fromJson(Map<String, dynamic> json) =>
+      TranslationHistory(
+        originalText: json['originalText']?.toString() ?? '',
+        translatedText: json['translatedText']?.toString() ?? '',
+        fromLanguage: json['fromLanguage']?.toString() ?? 'en',
+        toLanguage: json['toLanguage']?.toString() ?? 'en',
+        fromUser: json['fromUser']?.toString() ?? 'Unknown',
+        createdAt:
+            json['createdAt']?.toString() ?? DateTime.now().toIso8601String(),
+        isVoice: json['isVoice'] as bool? ?? false,
+      );
+}
+
 /// User in a room.
 class RoomUser {
   final String id;
@@ -50,8 +94,45 @@ class RoomUser {
   );
 }
 
+/// A saved phrase pair captured from translations/history.
+class SavedPhrase {
+  final String originalText;
+  final String translatedText;
+  final String fromLanguage;
+  final String toLanguage;
+  final String createdAt;
+
+  const SavedPhrase({
+    required this.originalText,
+    required this.translatedText,
+    required this.fromLanguage,
+    required this.toLanguage,
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'originalText': originalText,
+    'translatedText': translatedText,
+    'fromLanguage': fromLanguage,
+    'toLanguage': toLanguage,
+    'createdAt': createdAt,
+  };
+
+  factory SavedPhrase.fromJson(Map<String, dynamic> json) => SavedPhrase(
+    originalText: json['originalText']?.toString() ?? '',
+    translatedText: json['translatedText']?.toString() ?? '',
+    fromLanguage: json['fromLanguage']?.toString() ?? 'en',
+    toLanguage: json['toLanguage']?.toString() ?? 'en',
+    createdAt:
+        json['createdAt']?.toString() ?? DateTime.now().toIso8601String(),
+  );
+}
+
 /// Central app state.
 class AppState extends ChangeNotifier {
+  static const String _savedPhrasesKey = 'savedPhrasesV1';
+  static const String _translationHistoryKey = 'translationHistoryV1';
+
   // Server config
   String serverUrl;
 
@@ -80,6 +161,8 @@ class AppState extends ChangeNotifier {
   String mode = 'realtime'; // realtime or walkie
   double volume = 1.0;
   List<FeedEntry> feed = [];
+  List<SavedPhrase> savedPhrases = [];
+  List<TranslationHistory> history = [];
 
   StreamSubscription? _wsSub;
 
@@ -93,10 +176,204 @@ class AppState extends ChangeNotifier {
     userId = prefs.getString('userId');
     userName = prefs.getString('userName') ?? '';
     userLanguage = prefs.getString('userLanguage') ?? 'en';
+
+    // If we have a stored userId, verify it still exists on the server.
+    // The server is in-memory, so it resets on restart — re-register silently.
+    if (userId != null && userName.isNotEmpty) {
+      final exists = await api.verifyUser(userId!);
+      if (!exists) {
+        userId = null; // will trigger re-registration in the UI
+      }
+    }
+    await loadSavedPhrases();
+    await loadHistory();
     notifyListeners();
   }
 
-  Future<void> registerAndSaveIdentity(String name, String lang) async {
+  Future<void> loadSavedPhrases() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_savedPhrasesKey);
+
+    if (raw == null || raw.isEmpty) {
+      savedPhrases = [];
+      return;
+    }
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        savedPhrases = decoded
+            .whereType<Map>()
+            .map((e) => SavedPhrase.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      } else {
+        savedPhrases = [];
+      }
+    } catch (_) {
+      savedPhrases = [];
+    }
+
+    notifyListeners();
+  }
+
+  bool isPhraseSaved({
+    required String originalText,
+    required String translatedText,
+    required String fromLanguage,
+    required String toLanguage,
+  }) {
+    return savedPhrases.any((p) {
+      return p.originalText == originalText &&
+          p.translatedText == translatedText &&
+          p.fromLanguage.toLowerCase() == fromLanguage.toLowerCase() &&
+          p.toLanguage.toLowerCase() == toLanguage.toLowerCase();
+    });
+  }
+
+  Future<void> toggleSavedPhrase({
+    required String originalText,
+    required String translatedText,
+    required String fromLanguage,
+    required String toLanguage,
+  }) async {
+    final index = savedPhrases.indexWhere((p) {
+      return p.originalText == originalText &&
+          p.translatedText == translatedText &&
+          p.fromLanguage.toLowerCase() == fromLanguage.toLowerCase() &&
+          p.toLanguage.toLowerCase() == toLanguage.toLowerCase();
+    });
+
+    if (index >= 0) {
+      savedPhrases.removeAt(index);
+    } else {
+      savedPhrases.insert(
+        0,
+        SavedPhrase(
+          originalText: originalText,
+          translatedText: translatedText,
+          fromLanguage: fromLanguage.toLowerCase(),
+          toLanguage: toLanguage.toLowerCase(),
+          createdAt: DateTime.now().toIso8601String(),
+        ),
+      );
+    }
+
+    await _persistSavedPhrases();
+    notifyListeners();
+  }
+
+  Future<void> removeSavedPhrase(SavedPhrase phrase) async {
+    savedPhrases.removeWhere((p) {
+      return p.originalText == phrase.originalText &&
+          p.translatedText == phrase.translatedText &&
+          p.fromLanguage == phrase.fromLanguage &&
+          p.toLanguage == phrase.toLanguage;
+    });
+    await _persistSavedPhrases();
+    notifyListeners();
+  }
+
+  Future<void> addSavedPhraseEntry(
+    SavedPhrase phrase, {
+    int atIndex = 0,
+  }) async {
+    savedPhrases.removeWhere((p) {
+      return p.originalText == phrase.originalText &&
+          p.translatedText == phrase.translatedText &&
+          p.fromLanguage == phrase.fromLanguage &&
+          p.toLanguage == phrase.toLanguage;
+    });
+
+    final targetIndex = atIndex.clamp(0, savedPhrases.length);
+    savedPhrases.insert(targetIndex, phrase);
+    await _persistSavedPhrases();
+    notifyListeners();
+  }
+
+  Future<void> clearSavedPhrases() async {
+    if (savedPhrases.isEmpty) return;
+    savedPhrases.clear();
+    await _persistSavedPhrases();
+    notifyListeners();
+  }
+
+  Future<void> restoreSavedPhrases(List<SavedPhrase> phrases) async {
+    savedPhrases = List<SavedPhrase>.from(phrases);
+    await _persistSavedPhrases();
+    notifyListeners();
+  }
+
+  Future<void> _persistSavedPhrases() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = jsonEncode(savedPhrases.map((p) => p.toJson()).toList());
+    await prefs.setString(_savedPhrasesKey, raw);
+  }
+
+  // ── History Management ──────────────────────────────
+
+  Future<void> loadHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_translationHistoryKey);
+
+    if (raw == null || raw.isEmpty) {
+      history = [];
+      return;
+    }
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        history = decoded
+            .whereType<Map>()
+            .map((e) => TranslationHistory.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      } else {
+        history = [];
+      }
+    } catch (_) {
+      history = [];
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> addToHistory({
+    required String originalText,
+    required String translatedText,
+    required String fromLanguage,
+    required String toLanguage,
+    String? fromUser,
+    bool isVoice = false,
+  }) async {
+    final entry = TranslationHistory(
+      originalText: originalText,
+      translatedText: translatedText,
+      fromLanguage: fromLanguage.toLowerCase(),
+      toLanguage: toLanguage.toLowerCase(),
+      fromUser: fromUser ?? userName,
+      createdAt: DateTime.now().toIso8601String(),
+      isVoice: isVoice,
+    );
+
+    history.insert(0, entry); // Most recent first
+    await _persistHistory();
+    notifyListeners();
+  }
+
+  Future<void> _persistHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = jsonEncode(history.map((h) => h.toJson()).toList());
+    await prefs.setString(_translationHistoryKey, raw);
+  }
+
+  Future<void> clearHistory() async {
+    if (history.isEmpty) return;
+    history.clear();
+    await _persistHistory();
+    notifyListeners();
+  }
+
+  Future<bool> registerAndSaveIdentity(String name, String lang) async {
     final result = await api.registerUser(name, lang);
     if (result != null) {
       userId = result['id'];
@@ -107,7 +384,9 @@ class AppState extends ChangeNotifier {
       await prefs.setString('userName', userName);
       await prefs.setString('userLanguage', userLanguage);
       notifyListeners();
+      return true;
     }
+    return false;
   }
 
   Future<void> loadLanguages() async {
@@ -169,11 +448,13 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void changeLanguage(String lang) {
+  Future<void> changeLanguage(String lang) async {
     userLanguage = lang;
     if (ws.isConnected) {
       ws.sendControl({'type': 'change_language', 'language': lang});
     }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userLanguage', userLanguage);
     notifyListeners();
   }
 
@@ -229,7 +510,7 @@ class AppState extends ChangeNotifier {
   void _handleMessage(ServerMessage msg) {
     switch (msg.type) {
       case 'joined':
-        threadId = msg.data['threadId'] as String? ?? threadId;
+        threadId = msg.data['roomId'] as String? ?? threadId;
         _parseUsers(msg.data['users']);
         connectionStatus = 'connected';
         feed.clear();
@@ -263,7 +544,7 @@ class AppState extends ChangeNotifier {
         feed.add(
           FeedEntry(
             type: 'transcription',
-            fromUser: 'You',
+            fromUser: userName,
             originalText: msg.data['text'] as String?,
             fromLanguage: msg.data['language'] as String?,
           ),
@@ -281,6 +562,18 @@ class AppState extends ChangeNotifier {
             toLanguage: msg.data['toLanguage'] as String?,
           ),
         );
+        // Add to persistent history (fire and forget)
+        if (msg.data['originalText'] != null &&
+            msg.data['translatedText'] != null) {
+          addToHistory(
+            originalText: msg.data['originalText'] as String,
+            translatedText: msg.data['translatedText'] as String,
+            fromLanguage: msg.data['fromLanguage'] as String? ?? 'en',
+            toLanguage: msg.data['toLanguage'] as String? ?? 'en',
+            fromUser: msg.data['fromUser'] as String?,
+            isVoice: true,
+          );
+        }
         break;
 
       case 'audio_data':
