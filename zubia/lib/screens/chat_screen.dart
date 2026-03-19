@@ -309,13 +309,16 @@ class _ControlsBar extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                icon: const Icon(
-                  Icons.volume_mute,
+                icon: Icon(
+                  state.volume == 0.0 ? Icons.volume_off : Icons.volume_mute,
                   size: 20,
-                  color: ZubiaColors.textMuted,
+                  color: state.volume == 0.0
+                      ? ZubiaColors.magenta
+                      : ZubiaColors.textMuted,
                 ),
-                tooltip: 'Mute',
-                onPressed: () => state.setVolume(0.0),
+                tooltip: state.volume == 0.0 ? 'Unmute' : 'Mute',
+                onPressed: () =>
+                    state.setVolume(state.volume == 0.0 ? 1.0 : 0.0),
               ),
               Expanded(
                 child: Semantics(
@@ -339,13 +342,16 @@ class _ControlsBar extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.volume_up,
                   size: 20,
-                  color: ZubiaColors.textMuted,
+                  color: state.volume == 1.0
+                      ? ZubiaColors.magenta
+                      : ZubiaColors.textMuted,
                 ),
-                tooltip: 'Max volume',
-                onPressed: () => state.setVolume(1.0),
+                tooltip: state.volume == 1.0 ? 'Restore volume' : 'Max volume',
+                onPressed: () =>
+                    state.setVolume(state.volume == 1.0 ? 0.5 : 1.0),
               ),
             ],
           ),
