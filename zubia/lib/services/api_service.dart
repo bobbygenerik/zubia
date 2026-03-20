@@ -59,9 +59,9 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> searchUsers(String query) async {
     try {
-      final uri = Uri.parse('$baseUrl/api/users').replace(
-        queryParameters: query.isNotEmpty ? {'name': query} : null,
-      );
+      final uri = Uri.parse(
+        '$baseUrl/api/users',
+      ).replace(queryParameters: query.isNotEmpty ? {'name': query} : null);
       final res = await _client.get(uri);
       if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body);

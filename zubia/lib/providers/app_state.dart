@@ -325,7 +325,9 @@ class AppState extends ChangeNotifier {
       if (decoded is List) {
         history = decoded
             .whereType<Map>()
-            .map((e) => TranslationHistory.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => TranslationHistory.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
       } else {
         history = [];
