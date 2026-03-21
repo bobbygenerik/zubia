@@ -108,25 +108,46 @@ class _BottomNav extends StatelessWidget {
               active: false,
               onTap: () => context.go('/history'),
             ),
-            Container(
-              width: 44,
-              height: 44,
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: ZubiaColors.charcoalDark,
-                border: Border.all(
-                  color: ZubiaColors.magenta.withValues(alpha: 0.2),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: ZubiaColors.magenta.withValues(alpha: 0.15),
-                    blurRadius: 16,
+            Semantics(
+              button: true,
+              label: 'More actions',
+              child: Tooltip(
+                message: 'More actions',
+                child: GestureDetector(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('More actions coming soon!'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: ZubiaColors.charcoalDark,
+                      border: Border.all(
+                        color: ZubiaColors.magenta.withValues(alpha: 0.2),
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ZubiaColors.magenta.withValues(alpha: 0.15),
+                          blurRadius: 16,
+                        ),
+                      ],
+                    ),
+                    child: const SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: ZubiaLogo(excludeFromSemantics: true),
+                    ),
                   ),
-                ],
+                ),
               ),
-              child: const SizedBox(width: 36, height: 36, child: ZubiaLogo()),
             ),
             ZubiaNavItem(
               icon: Icons.favorite_outline,
