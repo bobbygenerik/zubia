@@ -115,7 +115,6 @@ class _HomeScreenState extends State<HomeScreen> {
             maxLength: 50,
             textCapitalization: TextCapitalization.words,
             textInputAction: TextInputAction.next,
-            maxLength: 50,
             decoration: const InputDecoration(
               labelText: 'Name *',
               hintText: 'Your name',

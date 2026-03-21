@@ -60,9 +60,9 @@ class _NewChatScreenState extends State<NewChatScreen> {
       context.go('/chat');
     } else if (mounted) {
       setState(() => _isStarting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to create chat')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to create chat')));
     }
   }
 
@@ -133,58 +133,59 @@ class _NewChatScreenState extends State<NewChatScreen> {
                           ),
                         )
                       : _results.isEmpty && !_isSearching
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.search_off,
-                                    size: 48,
-                                    color: ZubiaColors.textMuted,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  const Text(
-                                    'No users found',
-                                    style: TextStyle(
-                                      color: ZubiaColors.textMuted,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off,
+                                size: 48,
+                                color: ZubiaColors.textMuted,
                               ),
-                            )
-                          : ListView.builder(
-                              itemCount: _results.length,
-                              itemBuilder: (context, index) {
-                                final u = _results[index];
-                                final name = u['name'] ?? 'Unknown';
-                                final lang = u['language'] ?? 'en';
-                                return ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: ZubiaColors.magenta
-                                        .withValues(alpha: 0.1),
-                                    child: Text(
-                                      state.getFlagEmoji(lang),
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
-                                  ),
-                                  title: Text(
-                                    name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    'Speaks ${state.languages[lang] ?? lang}',
-                                    style: const TextStyle(
-                                      color: ZubiaColors.textSecondary,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  onTap: () => _startThread(u['id'], name),
-                                );
-                              },
-                            ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'No users found',
+                                style: TextStyle(
+                                  color: ZubiaColors.textMuted,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: _results.length,
+                          itemBuilder: (context, index) {
+                            final u = _results[index];
+                            final name = u['name'] ?? 'Unknown';
+                            final lang = u['language'] ?? 'en';
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: ZubiaColors.magenta.withValues(
+                                  alpha: 0.1,
+                                ),
+                                child: Text(
+                                  state.getFlagEmoji(lang),
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ),
+                              title: Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Speaks ${state.languages[lang] ?? lang}',
+                                style: const TextStyle(
+                                  color: ZubiaColors.textSecondary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              onTap: () => _startThread(u['id'], name),
+                            );
+                          },
+                        ),
                 ),
               ],
             ),
