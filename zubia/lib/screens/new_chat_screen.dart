@@ -88,6 +88,9 @@ class _NewChatScreenState extends State<NewChatScreen> {
                   child: TextField(
                     controller: _searchController,
                     autofocus: true,
+                    textInputAction: TextInputAction.search,
+                    autocorrect: false,
+                    enableSuggestions: false,
                     onChanged: _onSearchChanged,
                     decoration: InputDecoration(
                       hintText: 'Search by username...',
@@ -154,6 +157,8 @@ class _NewChatScreenState extends State<NewChatScreen> {
                           ),
                         )
                       : ListView.builder(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
                           itemCount: _results.length,
                           itemBuilder: (context, index) {
                             final u = _results[index];

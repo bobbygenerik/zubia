@@ -17,3 +17,6 @@
 ## 2024-05-27 - Smoothing Binary UI Transitions
 **Learning:** Binary state changes (like switching an icon or replacing an empty state with a list) feel jarring when they snap instantly. Using `AnimatedSwitcher` to cross-fade these components significantly increases the perceived polish and quality of the interaction. However, this often breaks synchronous widget tests because `AnimatedSwitcher` temporarily holds multiple widgets in the tree during the transition.
 **Action:** Use `AnimatedSwitcher` for state-driven UI swaps, ensure `ValueKey`s are present to trigger the transition, and update associated widget tests to use `pumpAndSettle()` and semantic-based finders (rather than simple `find.byIcon()`) to account for the animation duration.
+## 2024-05-28 - Keyboard Dismissal for Mobile Search
+**Learning:** Flutter's default `ListView` behavior does not automatically dismiss the software keyboard when a user scrolls through a list of search results. This forces users to manually dismiss the keyboard to see more results, leading to a cramped and frustrating mobile experience, especially on smaller screens.
+**Action:** Always apply `keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag` to scrollable lists (like `ListView.builder`) in search interfaces so the keyboard instinctively gets out of the user's way.
