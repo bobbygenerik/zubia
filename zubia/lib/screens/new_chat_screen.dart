@@ -137,17 +137,30 @@ class _NewChatScreenState extends State<NewChatScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.search_off,
                                 size: 48,
                                 color: ZubiaColors.textMuted,
                               ),
                               const SizedBox(height: 16),
-                              const Text(
-                                'No users found',
-                                style: TextStyle(
+                              Text(
+                                'No users match "${_searchController.text.trim()}"',
+                                style: const TextStyle(
                                   color: ZubiaColors.textMuted,
                                   fontSize: 16,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              TextButton.icon(
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _results = []);
+                                },
+                                icon: const Icon(Icons.clear, size: 18),
+                                label: const Text('Clear Search'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: ZubiaColors.magenta,
                                 ),
                               ),
                             ],
