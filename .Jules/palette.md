@@ -16,4 +16,6 @@
 
 ## 2024-05-27 - Smoothing Binary UI Transitions
 **Learning:** Binary state changes (like switching an icon or replacing an empty state with a list) feel jarring when they snap instantly. Using `AnimatedSwitcher` to cross-fade these components significantly increases the perceived polish and quality of the interaction. However, this often breaks synchronous widget tests because `AnimatedSwitcher` temporarily holds multiple widgets in the tree during the transition.
-**Action:** Use `AnimatedSwitcher` for state-driven UI swaps, ensure `ValueKey`s are present to trigger the transition, and update associated widget tests to use `pumpAndSettle()` and semantic-based finders (rather than simple `find.byIcon()`) to account for the animation duration.
+**Action:** Use `AnimatedSwitcher` for state-driven UI swaps, ensure `ValueKey`s are present to trigger the transition, and update associated widget tests to use `pumpAndSettle()` and semantic-based finders (rather than simple `find.byIcon()`) to account for the animation duration.## 2024-05-28 - Improving Search Empty States
+**Learning:** Generic, static empty states (like "No users found") force users to guess what went wrong and manually fix their input. Contextual empty states that echo the user's query ("No users match [search_query]") provide immediate clarity, and providing an explicit, actionable "Clear Search" button creates a much smoother recovery flow.
+**Action:** Always reflect the user's input context inside of search empty states, and add a direct action to reset the state.
