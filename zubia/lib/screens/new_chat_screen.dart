@@ -143,17 +143,27 @@ class _NewChatScreenState extends State<NewChatScreen> {
                                 color: ZubiaColors.textMuted,
                               ),
                               const SizedBox(height: 16),
-                              const Text(
-                                'No users found',
-                                style: TextStyle(
+                              Text(
+                                'No users match "${_searchController.text.trim()}"',
+                                style: const TextStyle(
                                   color: ZubiaColors.textMuted,
                                   fontSize: 16,
                                 ),
+                              ),
+                              const SizedBox(height: 16),
+                              TextButton(
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _results = []);
+                                },
+                                child: const Text('Clear Search'),
                               ),
                             ],
                           ),
                         )
                       : ListView.builder(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
                           itemCount: _results.length,
                           itemBuilder: (context, index) {
                             final u = _results[index];
