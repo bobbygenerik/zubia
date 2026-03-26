@@ -165,6 +165,8 @@ class _NewChatScreenState extends State<NewChatScreen> {
                           ),
                         )
                       : ListView.builder(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
                           itemCount: _results.length,
                           itemBuilder: (context, index) {
                             final u = _results[index];
