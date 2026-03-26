@@ -17,3 +17,7 @@
 ## 2024-05-27 - Smoothing Binary UI Transitions
 **Learning:** Binary state changes (like switching an icon or replacing an empty state with a list) feel jarring when they snap instantly. Using `AnimatedSwitcher` to cross-fade these components significantly increases the perceived polish and quality of the interaction. However, this often breaks synchronous widget tests because `AnimatedSwitcher` temporarily holds multiple widgets in the tree during the transition.
 **Action:** Use `AnimatedSwitcher` for state-driven UI swaps, ensure `ValueKey`s are present to trigger the transition, and update associated widget tests to use `pumpAndSettle()` and semantic-based finders (rather than simple `find.byIcon()`) to account for the animation duration.
+
+## 2024-05-28 - Search Input Keyboard Optimization
+**Learning:** Generic text inputs on mobile devices often trigger autocorrect and suggest completely irrelevant terms when the user is searching for specific identifiers like usernames. This causes frustration when the OS "fixes" a username search. Furthermore, the generic "Return" or "Done" keyboard action doesn't communicate the intent of the input.
+**Action:** Always set `autocorrect: false`, `enableSuggestions: false`, and `textInputAction: TextInputAction.search` for precise identifier searches (like usernames) in Flutter to disable OS interference and provide the correct visual cue on the software keyboard.
