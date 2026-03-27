@@ -223,17 +223,44 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   vertical: 12,
                 ),
                 children: entries.isEmpty
-                    ? const [
-                        SizedBox(height: 48),
-                        Center(
-                          child: Text(
-                            'No history results found',
-                            style: TextStyle(
-                              color: ZubiaColors.textMuted,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
+                    ? [
+                        const SizedBox(height: 48),
+                        _query.isNotEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.search_off,
+                                      size: 48,
+                                      color: ZubiaColors.textMuted,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No history match "$_query"',
+                                      style: const TextStyle(
+                                        color: ZubiaColors.textMuted,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextButton(
+                                      onPressed: () =>
+                                          setState(() => _query = ''),
+                                      child: const Text('Clear Search'),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : const Center(
+                                child: Text(
+                                  'No history results found',
+                                  style: TextStyle(
+                                    color: ZubiaColors.textMuted,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
                       ]
                     : historyWidgets,
               ),
