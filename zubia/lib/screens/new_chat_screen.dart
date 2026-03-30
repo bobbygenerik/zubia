@@ -60,9 +60,15 @@ class _NewChatScreenState extends State<NewChatScreen> {
       context.go('/chat');
     } else if (mounted) {
       setState(() => _isStarting = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to create chat')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Failed to create chat. Please try again.'),
+          action: SnackBarAction(
+            label: 'RETRY',
+            onPressed: () => _startThread(otherUserId, otherUserName),
+          ),
+        ),
+      );
     }
   }
 
