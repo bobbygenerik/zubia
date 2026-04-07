@@ -53,5 +53,75 @@ void main() {
 
       expect(result, isNull);
     });
+
+    test('searchUsers success with query', () async {
+      final client = MockClient((request) async {
+        expect(request.url.toString(), '$baseUrl/api/users?name=test');
+        expect(request.method, 'GET');
+
+        return http.Response(
+          jsonEncode([
+            {'id': '1', 'name': 'test1'},
+            {'id': '2', 'name': 'test2'},
+          ]),
+          200,
+        );
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.searchUsers('test');
+
+      expect(result.length, 2);
+      expect(result[0]['id'], '1');
+      expect(result[0]['name'], 'test1');
+      expect(result[1]['id'], '2');
+      expect(result[1]['name'], 'test2');
+    });
+
+    test('searchUsers success with empty query', () async {
+      final client = MockClient((request) async {
+        expect(request.url.toString(), '$baseUrl/api/users');
+        expect(request.method, 'GET');
+
+        return http.Response(
+          jsonEncode([
+            {'id': '1', 'name': 'user1'},
+            {'id': '2', 'name': 'user2'},
+          ]),
+          200,
+        );
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.searchUsers('');
+
+      expect(result.length, 2);
+      expect(result[0]['id'], '1');
+      expect(result[0]['name'], 'user1');
+      expect(result[1]['id'], '2');
+      expect(result[1]['name'], 'user2');
+    });
+
+    test('searchUsers failure', () async {
+      final client = MockClient((request) async {
+        return http.Response('Internal Server Error', 500);
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.searchUsers('test');
+
+      expect(result, isEmpty);
+    });
+
+    test('searchUsers exception', () async {
+      final client = MockClient((request) async {
+        throw http.ClientException('Network error');
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.searchUsers('test');
+
+      expect(result, isEmpty);
+    });
   });
 }
