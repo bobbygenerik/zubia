@@ -197,20 +197,34 @@ async def get_threads(user_id: str):
     if user_id not in users_db:
         return JSONResponse({"error": "User not found"}, status_code=404)
 
+    keys = user_threads.get(user_id, [])
+    if not keys:
+        return JSONResponse([])
+
+    # 1. Fetch valid threads and collect other user IDs
+    valid_threads = []
+    other_ids = set()
+    for key in keys:
+        if (thread := threads_db.get(key)):
+            other_id = thread["user2_id"] if thread["user1_id"] == user_id else thread["user1_id"]
+            valid_threads.append((thread, other_id))
+            other_ids.add(other_id)
+
+    # 2. Batched lookup simulation
+    # Pre-fetching all needed users avoids an N+1 query pattern if moved to a real database.
+    other_users = {uid: u for uid in other_ids if (u := users_db.get(uid))}
+
+    # 3. Construct result using the pre-fetched data
     result = []
-    for key in user_threads.get(user_id, []):
-        thread = threads_db.get(key)
-        if not thread:
-            continue
-        other_id = thread["user2_id"] if thread["user1_id"] == user_id else thread["user1_id"]
-        other = users_db.get(other_id)
-        if other:
+    for thread, other_id in valid_threads:
+        if (other := other_users.get(other_id)):
             result.append({
                 "id": thread["id"],
                 "otherUserId": other_id,
                 "otherUserName": other["name"],
                 "otherUserLanguage": other["language"],
             })
+
     return JSONResponse(result)
 
 
