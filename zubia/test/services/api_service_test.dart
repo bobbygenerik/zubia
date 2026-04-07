@@ -53,5 +53,50 @@ void main() {
 
       expect(result, isNull);
     });
+
+    test('getThreads success', () async {
+      final client = MockClient((request) async {
+        expect(request.url.toString(), '$baseUrl/api/threads/user123');
+        expect(request.method, 'GET');
+
+        return http.Response(
+          jsonEncode([
+            {'id': 'thread1', 'user1_id': 'user123', 'user2_id': 'user456'},
+            {'id': 'thread2', 'user1_id': 'user789', 'user2_id': 'user123'}
+          ]),
+          200,
+        );
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.getThreads('user123');
+
+      expect(result, isNotEmpty);
+      expect(result.length, 2);
+      expect(result[0]['id'], 'thread1');
+      expect(result[1]['id'], 'thread2');
+    });
+
+    test('getThreads failure', () async {
+      final client = MockClient((request) async {
+        return http.Response('Internal Server Error', 500);
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.getThreads('user123');
+
+      expect(result, isEmpty);
+    });
+
+    test('getThreads exception', () async {
+      final client = MockClient((request) async {
+        throw http.ClientException('Network error');
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.getThreads('user123');
+
+      expect(result, isEmpty);
+    });
   });
 }
