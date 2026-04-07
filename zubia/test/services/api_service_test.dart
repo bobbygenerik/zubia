@@ -53,5 +53,69 @@ void main() {
 
       expect(result, isNull);
     });
+
+    test('searchUsers with query returns results', () async {
+      final client = MockClient((request) async {
+        expect(request.url.toString(), '$baseUrl/api/users?name=test');
+        expect(request.method, 'GET');
+
+        return http.Response(
+          jsonEncode([
+            {'id': '1', 'name': 'testUser1'},
+            {'id': '2', 'name': 'testUser2'}
+          ]),
+          200,
+        );
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.searchUsers('test');
+
+      expect(result.length, 2);
+      expect(result[0]['name'], 'testUser1');
+      expect(result[1]['name'], 'testUser2');
+    });
+
+    test('searchUsers with empty query returns results', () async {
+      final client = MockClient((request) async {
+        expect(request.url.toString(), '$baseUrl/api/users');
+        expect(request.method, 'GET');
+
+        return http.Response(
+          jsonEncode([
+            {'id': '3', 'name': 'User3'}
+          ]),
+          200,
+        );
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.searchUsers('');
+
+      expect(result.length, 1);
+      expect(result[0]['name'], 'User3');
+    });
+
+    test('searchUsers failure returns empty list', () async {
+      final client = MockClient((request) async {
+        return http.Response('Internal Server Error', 500);
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.searchUsers('test');
+
+      expect(result, isEmpty);
+    });
+
+    test('searchUsers exception returns empty list', () async {
+      final client = MockClient((request) async {
+        throw http.ClientException('Network error');
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.searchUsers('test');
+
+      expect(result, isEmpty);
+    });
   });
 }
