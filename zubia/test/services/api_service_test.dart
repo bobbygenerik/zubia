@@ -53,5 +53,45 @@ void main() {
 
       expect(result, isNull);
     });
+
+    test('createThread success', () async {
+      final client = MockClient((request) async {
+        expect(request.url.toString(), '$baseUrl/api/threads');
+        expect(request.method, 'POST');
+        expect(request.headers['Content-Type'], 'application/json');
+        final body = jsonDecode(request.body);
+        expect(body['user1_id'], 'user1');
+        expect(body['user2_id'], 'user2');
+
+        return http.Response(jsonEncode({'id': 'thread123'}), 200);
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.createThread('user1', 'user2');
+
+      expect(result, 'thread123');
+    });
+
+    test('createThread failure', () async {
+      final client = MockClient((request) async {
+        return http.Response('Internal Server Error', 500);
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.createThread('user1', 'user2');
+
+      expect(result, isNull);
+    });
+
+    test('createThread exception', () async {
+      final client = MockClient((request) async {
+        throw http.ClientException('Network error');
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.createThread('user1', 'user2');
+
+      expect(result, isNull);
+    });
   });
 }
