@@ -6,10 +6,13 @@ import 'package:path_provider/path_provider.dart';
 
 /// Audio recording service with support for real-time chunking and walkie-talkie modes.
 class AudioRecorderService {
-  final AudioRecorder _recorder = AudioRecorder();
+  final AudioRecorder _recorder;
   Timer? _chunkTimer;
   bool _isRecording = false;
   String? _currentPath;
+
+  AudioRecorderService({AudioRecorder? recorder})
+      : _recorder = recorder ?? AudioRecorder();
 
   bool get isRecording => _isRecording;
 
