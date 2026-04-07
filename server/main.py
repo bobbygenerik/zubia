@@ -146,7 +146,7 @@ async def create_room(data: RoomCreate):
 async def register_user(data: UserRegister):
     """Register a new user."""
     user_id = str(uuid.uuid4())[:8]
-    users_db[user_id] = {"id": user_id, "name": data.name, "language": data.language}
+    users_db[user_id] = {"id": user_id, "name": data.name, "language": data.language, "name_lower": data.name.lower()}
     logger.info(f"User registered: {data.name} ({user_id})")
     return JSONResponse({"id": user_id, "name": data.name, "language": data.language})
 
@@ -164,10 +164,15 @@ async def get_user(user_id: str):
 async def search_users(name: str = ""):
     """Search users by name (substring match)."""
     name_lower = name.lower().strip()
+
+    def _strip_index(user_dict):
+        """Remove internal indexing fields before returning to client."""
+        return {k: v for k, v in user_dict.items() if k != "name_lower"}
+
     if not name_lower:
-        results = list(users_db.values())
+        results = [_strip_index(u) for u in users_db.values()]
     else:
-        results = [u for u in users_db.values() if name_lower in u["name"].lower()]
+        results = [_strip_index(u) for u in users_db.values() if name_lower in u.get("name_lower", u["name"].lower())]
     return JSONResponse(results)
 
 
