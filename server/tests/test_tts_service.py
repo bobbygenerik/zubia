@@ -120,6 +120,22 @@ class TestTTSService(unittest.TestCase):
         self.assertIsInstance(result, bytes)
         mock_silence.assert_called()
 
+    @patch("server.tts_service._inner_synthesize")
+    @patch("server.tts_service._generate_silence")
+    def test_synthesize_inner_exception(self, mock_silence, mock_inner_synthesize):
+        """Test that an exception in _inner_synthesize is caught and returns silence."""
+        # Setup
+        mock_inner_synthesize.side_effect = Exception("Inner synthesis failed")
+        mock_silence.return_value = b'silence'
+
+        # Act
+        result = tts_service.synthesize("Hello", "en")
+
+        # Assert
+        self.assertEqual(result, b'silence')
+        mock_inner_synthesize.assert_called_once_with("Hello", "en", 1.0)
+        mock_silence.assert_called_once_with(0.5)
+
     @patch("server.tts_service._download_voice")
     @patch("server.tts_service._generate_silence")
     def test_synthesize_piper_load_failure(self, mock_silence, mock_download):
