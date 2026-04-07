@@ -6,6 +6,6 @@ class Config {
   /// `flutter run --dart-define=SERVER_URL=https://your-server-url.com`
   static const String serverUrl = String.fromEnvironment(
     'SERVER_URL',
-    defaultValue: 'http://15.204.95.57',
+    defaultValue: 'https://15.204.95.57',
   );
 }
