@@ -114,6 +114,7 @@ class Room:
 # Global registries
 rooms: dict[str, Room] = {}
 users_db: dict[str, dict] = {}           # userId -> {id, name, language}
+users_name_lower: dict[str, str] = {}    # userId -> name.lower()
 threads_db: dict[str, dict] = {}         # threadKey -> {id, user1_id, user2_id}
 user_threads: dict[str, list[str]] = {}  # userId -> [threadKey, ...]
 
@@ -147,6 +148,7 @@ async def register_user(data: UserRegister):
     """Register a new user."""
     user_id = str(uuid.uuid4())[:8]
     users_db[user_id] = {"id": user_id, "name": data.name, "language": data.language}
+    users_name_lower[user_id] = data.name.lower()
     logger.info(f"User registered: {data.name} ({user_id})")
     return JSONResponse({"id": user_id, "name": data.name, "language": data.language})
 
@@ -167,7 +169,7 @@ async def search_users(name: str = ""):
     if not name_lower:
         results = list(users_db.values())
     else:
-        results = [u for u in users_db.values() if name_lower in u["name"].lower()]
+        results = [users_db[uid] for uid, uname_lower in users_name_lower.items() if name_lower in uname_lower]
     return JSONResponse(results)
 
 
