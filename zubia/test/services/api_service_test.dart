@@ -8,6 +8,59 @@ void main() {
   group('ApiService', () {
     const baseUrl = 'http://test.com';
 
+    test('getLanguages success', () async {
+      final client = MockClient((request) async {
+        expect(request.url.toString(), '$baseUrl/api/languages');
+        expect(request.method, 'GET');
+
+        return http.Response(
+          jsonEncode({
+            'en': 'English',
+            'es': 'Spanish',
+            'fr': 'French',
+          }),
+          200,
+        );
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.getLanguages();
+
+      expect(result, isNotNull);
+      expect(result.length, 3);
+      expect(result['en'], 'English');
+      expect(result['es'], 'Spanish');
+      expect(result['fr'], 'French');
+    });
+
+    test('getLanguages fallback on non-200 status code', () async {
+      final client = MockClient((request) async {
+        return http.Response('Internal Server Error', 500);
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.getLanguages();
+
+      expect(result, isNotNull);
+      expect(result.length, 10); // Default fallback map size
+      expect(result['en'], 'English');
+      expect(result['zh'], 'Chinese');
+    });
+
+    test('getLanguages fallback on exception', () async {
+      final client = MockClient((request) async {
+        throw http.ClientException('Network error');
+      });
+
+      final apiService = ApiService(baseUrl: baseUrl, client: client);
+      final result = await apiService.getLanguages();
+
+      expect(result, isNotNull);
+      expect(result.length, 10);
+      expect(result['en'], 'English');
+      expect(result['zh'], 'Chinese');
+    });
+
     test('registerUser success', () async {
       final client = MockClient((request) async {
         expect(request.url.toString(), '$baseUrl/api/users/register');
