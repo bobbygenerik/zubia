@@ -56,9 +56,13 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isSaving = false);
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
+        SnackBar(
+          content: const Text(
             'Could not create profile. Check server connection and try again.',
+          ),
+          action: SnackBarAction(
+            label: 'RETRY',
+            onPressed: () => _saveIdentity(),
           ),
         ),
       );
