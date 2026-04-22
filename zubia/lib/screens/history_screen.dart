@@ -76,6 +76,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           content: TextField(
             controller: controller,
             autofocus: true,
+            autocorrect: false,
+            enableSuggestions: false,
             textInputAction: TextInputAction.search,
             decoration: const InputDecoration(
               hintText: 'Search by phrase or language...',
