@@ -128,77 +128,97 @@ class _NewChatScreenState extends State<NewChatScreen> {
                   ),
                 ),
                 Expanded(
-                  child: !hasQuery
-                      ? const Center(
-                          child: Text(
-                            'Search for someone to chat with',
-                            style: TextStyle(color: ZubiaColors.textMuted),
-                          ),
-                        )
-                      : _results.isEmpty && !_isSearching
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.search_off,
-                                size: 48,
-                                color: ZubiaColors.textMuted,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No users match "${_searchController.text.trim()}"',
-                                style: const TextStyle(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: !hasQuery
+                        ? Center(
+                            key: const ValueKey('initial_empty'),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.person_search,
+                                  size: 48,
+                                  color: ZubiaColors.textMuted.withValues(alpha: 0.5),
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Search for someone to chat with',
+                                  style: TextStyle(
+                                    color: ZubiaColors.textMuted,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : _results.isEmpty && !_isSearching
+                        ? Center(
+                            key: const ValueKey('no_results'),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.search_off,
+                                  size: 48,
                                   color: ZubiaColors.textMuted,
-                                  fontSize: 16,
                                 ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextButton(
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() => _results = []);
-                                },
-                                child: const Text('Clear Search'),
-                              ),
-                            ],
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No users match "${_searchController.text.trim()}"',
+                                  style: const TextStyle(
+                                    color: ZubiaColors.textMuted,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                TextButton(
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => _results = []);
+                                  },
+                                  child: const Text('Clear Search'),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            key: const ValueKey('results_list'),
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            itemCount: _results.length,
+                            itemBuilder: (context, index) {
+                              final u = _results[index];
+                              final name = u['name'] ?? 'Unknown';
+                              final lang = u['language'] ?? 'en';
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: ZubiaColors.magenta.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  child: Text(
+                                    state.getFlagEmoji(lang),
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                title: Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'Speaks ${state.languages[lang] ?? lang}',
+                                  style: const TextStyle(
+                                    color: ZubiaColors.textSecondary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                onTap: () => _startThread(u['id'], name),
+                              );
+                            },
                           ),
-                        )
-                      : ListView.builder(
-                          keyboardDismissBehavior:
-                              ScrollViewKeyboardDismissBehavior.onDrag,
-                          itemCount: _results.length,
-                          itemBuilder: (context, index) {
-                            final u = _results[index];
-                            final name = u['name'] ?? 'Unknown';
-                            final lang = u['language'] ?? 'en';
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: ZubiaColors.magenta.withValues(
-                                  alpha: 0.1,
-                                ),
-                                child: Text(
-                                  state.getFlagEmoji(lang),
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                              title: Text(
-                                name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              subtitle: Text(
-                                'Speaks ${state.languages[lang] ?? lang}',
-                                style: const TextStyle(
-                                  color: ZubiaColors.textSecondary,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              onTap: () => _startThread(u['id'], name),
-                            );
-                          },
-                        ),
+                  ),
                 ),
               ],
             ),
