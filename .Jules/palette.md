@@ -21,3 +21,6 @@
 ## 2024-05-28 - Search Input Keyboard Optimization
 **Learning:** Generic text inputs on mobile devices often trigger autocorrect and suggest completely irrelevant terms when the user is searching for specific identifiers like usernames. This causes frustration when the OS "fixes" a username search. Furthermore, the generic "Return" or "Done" keyboard action doesn't communicate the intent of the input.
 **Action:** Always set `autocorrect: false`, `enableSuggestions: false`, and `textInputAction: TextInputAction.search` for precise identifier searches (like usernames) in Flutter to disable OS interference and provide the correct visual cue on the software keyboard.
+## $(date +%Y-%m-%d) - Error Recovery UX with Retry Snackbars
+**Learning:** Transient network failures (like profile creation or starting a chat) can be highly disruptive if the user must re-navigate or re-enter data. Modifying a `SnackBar` to include an actionable `SnackBarAction` (like "RETRY") allows for rapid, single-tap recovery.
+**Action:** Always consider adding actionable recovery steps directly in error notifications. Remember that attaching an `onPressed` callback requires dropping the `const` modifier from the `SnackBar` instantiation in Flutter.
