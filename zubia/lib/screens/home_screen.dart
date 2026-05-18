@@ -56,10 +56,11 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isSaving = false);
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
+        SnackBar(
+          content: const Text(
             'Could not create profile. Check server connection and try again.',
           ),
+          action: SnackBarAction(label: 'RETRY', onPressed: _saveIdentity),
         ),
       );
     }
@@ -110,7 +111,6 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 32),
           TextField(
             controller: _nameController,
-            onChanged: (_) => setState(() {}),
             autofocus: true,
             maxLength: 50,
             textCapitalization: TextCapitalization.words,
@@ -143,28 +143,33 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           const Spacer(),
-          if (_nameController.text.trim().isEmpty && !_isSaving)
-            Tooltip(
-              message: 'Please enter your name to continue',
-              child: ElevatedButton(
-                onPressed: null,
-                child: const Text('Continue'),
-              ),
-            )
-          else
-            ElevatedButton(
-              onPressed: !_isSaving ? _saveIdentity : null,
-              child: _isSaving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Continue'),
-            ),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _nameController,
+            builder: (context, value, child) {
+              if (value.text.trim().isEmpty && !_isSaving) {
+                return Tooltip(
+                  message: 'Please enter your name to continue',
+                  child: ElevatedButton(
+                    onPressed: null,
+                    child: const Text('Continue'),
+                  ),
+                );
+              }
+              return ElevatedButton(
+                onPressed: !_isSaving ? _saveIdentity : null,
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Continue'),
+              );
+            },
+          ),
           const SizedBox(height: 32),
         ],
       ),
